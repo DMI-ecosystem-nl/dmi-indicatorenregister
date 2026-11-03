@@ -21,7 +21,7 @@ export default function IndicatorenPage() {
           </>
         }
       />
-      <Container className="pt-2">
+      <Container className="pt-6">
         <Suspense fallback={<p className="py-10 text-sm text-muted-foreground">Catalogus laden…</p>}>
           <Catalogue />
         </Suspense>

@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
-import { domainOrder, domains } from "@/data/taxonomy";
-import type { DomainCode, MonitoringQuestion } from "@/data/types";
-import { cn } from "@/lib/utils";
+import { actielijnen, actielijnOrder, domainOrder, domains } from "@/data/taxonomy";
+import type { Actielijn, DomainCode, MonitoringQuestion } from "@/data/types";
 import { CoverageBar } from "./coverage-bar";
 import { DomainIcon } from "./domain-icon";
-import { Input } from "./ui/input";
+import { FacetSelect, FilterRow, SearchField, Segmented, StatusBar, Toolbar, type ActiveFilter } from "./filter-controls";
 
 export function QuestionList({ questions }: { questions: MonitoringQuestion[] }) {
   const [domain, setDomain] = useState<DomainCode | null>(null);
-  const [onlyRegister, setOnlyRegister] = useState(false);
+  const [actielijn, setActielijn] = useState<Actielijn | null>(null);
+  const [scope, setScope] = useState<"alle" | "register">("alle");
   const [search, setSearch] = useState("");
 
   const results = useMemo(() => {
@@ -20,45 +19,61 @@ export function QuestionList({ questions }: { questions: MonitoringQuestion[] })
     return questions.filter(
       (x) =>
         (!domain || x.domains.includes(domain)) &&
-        (!onlyRegister || x.inRegister) &&
+        (!actielijn || x.blauwdruk.some((c) => c.startsWith(actielijn))) &&
+        (scope === "alle" || x.inRegister) &&
         (!q || `${x.id} ${x.title} ${x.kernvraag ?? ""} ${x.variaties ?? ""}`.toLowerCase().includes(q))
     );
-  }, [questions, domain, onlyRegister, search]);
+  }, [questions, domain, actielijn, scope, search]);
+
+  const inRegister = questions.filter((q) => q.inRegister).length;
+  const active: ActiveFilter[] = [
+    ...(search.trim() ? [{ key: "q", label: `“${search.trim()}”`, onRemove: () => setSearch("") }] : []),
+    ...(domain ? [{ key: "d", label: `${domain}. ${domains[domain].short}`, onRemove: () => setDomain(null) }] : []),
+    ...(actielijn
+      ? [{ key: "a", label: `Actielijn ${actielijn}`, onRemove: () => setActielijn(null) }]
+      : []),
+  ];
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative md:w-80">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Zoek een monitoringsvraag…"
-            className="h-9 bg-white pl-8"
-            aria-label="Zoek monitoringsvragen"
+      <Toolbar>
+        <div className="flex flex-col gap-2 md:flex-row">
+          <SearchField value={search} onChange={setSearch} placeholder="Zoek een monitoringsvraag" label="Zoek monitoringsvragen" />
+          <Segmented
+            label="Reikwijdte"
+            value={scope}
+            onChange={setScope}
+            options={[
+              { value: "alle", label: <>Alle vragen <span className="tabular-nums opacity-70">{questions.length}</span></> },
+              { value: "register", label: <>Met indicator in register <span className="tabular-nums opacity-70">{inRegister}</span></> },
+            ]}
           />
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          <Chip on={!domain} onClick={() => setDomain(null)}>Alle domeinen</Chip>
-          {domainOrder.map((c) => (
-            <Chip key={c} on={domain === c} onClick={() => setDomain(domain === c ? null : c)}>
-              <DomainIcon code={c} className="size-3.5" /> {domains[c].short}
-            </Chip>
-          ))}
-        </div>
-        <label className="inline-flex items-center gap-2 text-sm text-dmi-navy md:ml-auto">
-          <input
-            type="checkbox"
-            checked={onlyRegister}
-            onChange={(e) => setOnlyRegister(e.target.checked)}
-            className="size-4 accent-[var(--dmi-navy)]"
+        <FilterRow>
+          <FacetSelect<DomainCode>
+            label="Domein"
+            value={domain}
+            options={domainOrder.map((d) => ({ value: d, label: `${d}. ${domains[d].label}` }))}
+            onChange={setDomain}
           />
-          Alleen met indicator in register
-        </label>
-      </div>
-      <p className="text-xs text-muted-foreground tabular-nums" aria-live="polite">
-        {results.length} monitoringsvragen
-      </p>
+          <FacetSelect<Actielijn>
+            label="Actielijn G40"
+            value={actielijn}
+            options={actielijnOrder.map((a) => ({ value: a, label: `${a}. ${actielijnen[a].title}` }))}
+            onChange={setActielijn}
+          />
+        </FilterRow>
+        <StatusBar
+          count={results.length}
+          noun={["monitoringsvraag", "monitoringsvragen"]}
+          active={active}
+          onClear={() => {
+            setSearch("");
+            setDomain(null);
+            setActielijn(null);
+          }}
+        />
+      </Toolbar>
       <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-white shadow-dmi-sm">
         {results.map((q) => {
           const total = q.indicatorSlugs.length;
@@ -95,21 +110,5 @@ export function QuestionList({ questions }: { questions: MonitoringQuestion[] })
         })}
       </ul>
     </div>
-  );
-}
-
-function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs transition-colors",
-        on ? "border-dmi-navy bg-dmi-navy text-white" : "border-border bg-white text-dmi-navy hover:bg-dmi-blue-050"
-      )}
-    >
-      {children}
-    </button>
   );
 }

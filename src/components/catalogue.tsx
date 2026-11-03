@@ -1,12 +1,10 @@
 "use client";
 
-import { LayoutGrid, Table2 } from "lucide-react";
 import { motion } from "motion/react";
 import { domainOrder, domains } from "@/data/taxonomy";
 import { filterIndicators } from "@/lib/filters";
 import { indicators } from "@/lib/selectors";
-import { useFilterParams, type View } from "@/lib/use-filter-params";
-import { cn } from "@/lib/utils";
+import { useFilterParams } from "@/lib/use-filter-params";
 import { DomainIcon } from "./domain-icon";
 import { FilterBar } from "./filter-bar";
 import { IndicatorCard } from "./indicator-card";
@@ -19,14 +17,13 @@ export function Catalogue() {
 
   return (
     <div className="space-y-6">
-      <div className="z-30 -mx-4 md:sticky md:top-14 lg:top-0 border-b border-border bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <FilterBar filters={filters} onChange={setFilters} resultCount={results.length} />
-          </div>
-          <ViewToggle view={view} onChange={setView} />
-        </div>
-      </div>
+      <FilterBar
+        filters={filters}
+        onChange={setFilters}
+        resultCount={results.length}
+        view={view}
+        onViewChange={setView}
+      />
 
       {results.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
@@ -67,32 +64,6 @@ export function Catalogue() {
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-function ViewToggle({ view, onChange }: { view: View; onChange: (v: View) => void }) {
-  return (
-    <div className="hidden shrink-0 rounded-lg border border-border bg-white p-0.5 md:inline-flex" role="group" aria-label="Weergave">
-      {(
-        [
-          ["kaarten", LayoutGrid, "Kaarten"],
-          ["tabel", Table2, "Tabel"],
-        ] as const
-      ).map(([v, Icon, label]) => (
-        <button
-          key={v}
-          type="button"
-          aria-pressed={view === v}
-          onClick={() => onChange(v)}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground",
-            view === v && "bg-dmi-blue-100 text-dmi-navy"
-          )}
-        >
-          <Icon className="size-3.5" /> {label}
-        </button>
-      ))}
     </div>
   );
 }

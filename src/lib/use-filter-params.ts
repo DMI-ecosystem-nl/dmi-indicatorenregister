@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { domainOrder, geschiktheidOrder, schaalOrder, type Schaal } from "@/data/taxonomy";
 import type { DomainCode, Geschiktheid } from "@/data/types";
 import type { Filters } from "@/lib/filters";
@@ -14,7 +14,6 @@ const VIEWS: View[] = ["kaarten", "tabel"];
  * back from an indicator page — is a shareable link.
  */
 export function useFilterParams() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -55,9 +54,11 @@ export function useFilterParams() {
       if (next.search.trim()) params.set("q", next.search);
       if (nextView !== "kaarten") params.set("view", nextView);
       const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      // Native history API: instant, no server round-trip, and Next.js keeps
+      // useSearchParams() in sync.
+      window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
     },
-    [pathname, router]
+    [pathname]
   );
 
   const setFilters = useCallback((next: Filters) => write(next, view), [write, view]);
