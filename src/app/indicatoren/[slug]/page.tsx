@@ -158,7 +158,7 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
             <h2 className="mb-3 font-heading text-lg font-semibold text-dmi-navy">Metadata</h2>
             {sparse && (
               <p className="mb-3 rounded-lg bg-dmi-blue-050 px-3 py-2 text-xs text-muted-foreground">
-                De metadata van deze indicator is nog niet compleet; deze wordt richting versie 1.0 aangevuld.
+                De metadata van deze indicator is nog niet compleet. Deze wordt aangevuld voor versie 1.0.
               </p>
             )}
             <dl className="grid gap-x-6 gap-y-5 rounded-xl border border-border bg-white p-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -209,7 +209,7 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
           )}
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
           <div className="rounded-xl border border-border bg-white p-5 shadow-dmi-sm">
             <h2 className="dmi-tag text-[10px] text-muted-foreground">Bron</h2>
             {i.bronUrl ? (
@@ -240,8 +240,7 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
                 ))}
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
-                Deze indicator draagt bij aan het monitoren van {i.blauwdruk.length}{" "}
-                {i.blauwdruk.length === 1 ? "actie" : "acties"} uit de Blauwdruk G40.
+                Gekoppeld aan {i.blauwdruk.length} {i.blauwdruk.length === 1 ? "actie" : "acties"} uit de Blauwdruk G40.
               </p>
             </div>
           )}

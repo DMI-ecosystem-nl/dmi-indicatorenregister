@@ -19,7 +19,7 @@ export function Catalogue() {
 
   return (
     <div className="space-y-6">
-      <div className="z-30 -mx-4 md:sticky md:top-14 border-b border-border bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="z-30 -mx-4 md:sticky md:top-14 lg:top-0 border-b border-border bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <FilterBar filters={filters} onChange={setFilters} resultCount={results.length} />
@@ -54,8 +54,8 @@ export function Catalogue() {
                   {items.map((i, idx) => (
                     <motion.div
                       key={i.slug}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ y: 8 }}
+                      animate={{ y: 0 }}
                       transition={{ duration: 0.25, delay: Math.min(idx, 12) * 0.02 }}
                     >
                       <IndicatorCard indicator={i} backQuery={backQuery} showDomain={false} />

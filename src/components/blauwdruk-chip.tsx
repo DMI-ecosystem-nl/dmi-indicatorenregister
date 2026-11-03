@@ -9,7 +9,7 @@ export function BlauwdrukChip({ code, className }: { code: string; className?: s
     <Link
       href={action ? `/blauwdruk/${action.slug}` : "/blauwdruk"}
       className={cn(
-        "dmi-tag inline-flex h-5 items-center rounded border border-dmi-gold/60 bg-[#fdf3dc] px-1.5 text-[10px] font-medium text-[#7a5410] hover:bg-[#fbe7b8] transition-colors",
+        "dmi-tag inline-flex h-6 sm:h-5 items-center rounded border border-dmi-gold/60 bg-[#fdf3dc] px-1.5 text-[10px] font-medium text-[#7a5410] hover:bg-[#fbe7b8] transition-colors",
         className
       )}
     >

@@ -16,7 +16,7 @@ export default function OverPage() {
         crumbs={[{ label: "Over" }]}
         eyebrow="Colofon"
         title="Over dit register"
-        description="Deze website maakt het DMI indicatorenregister doorzoekbaar en deelbaar. De inhoud is een werkbaar concept dat dit najaar met de DMI Indicatoren community wordt getoetst."
+        description="Op deze website kun je het DMI indicatorenregister doorzoeken en delen. De inhoud is een werkbaar concept. De DMI Indicatoren community toetst de inhoud dit najaar."
       />
       <Container className="grid gap-10 py-10 lg:grid-cols-[1fr_360px]">
         <div className="space-y-8 text-sm leading-relaxed">
@@ -30,8 +30,8 @@ export default function OverPage() {
             <h2 className="font-heading text-xl font-semibold text-dmi-navy">Status</h2>
             <p>
               Versie <strong>v{meta.pdfVersion}</strong> ({formatDate(meta.pdfDate)}) is een concept. Versie 1.0 van het
-              indicatorenregister en het dashboard wordt op <strong>2 december 2026</strong> opgeleverd. In 2027 staan de
-              inrichting van organisatie en beheer en het uittesten in de praktijk centraal.
+              register en het dashboard komt op <strong>2 december 2026</strong>. In 2027 volgen de inrichting van
+              organisatie en beheer en het testen in de praktijk.
             </p>
           </section>
           <section className="space-y-3">
@@ -46,9 +46,9 @@ export default function OverPage() {
                 {changed === 1 ? "indicator" : "indicatoren"} de geschiktheid aangepast; dit staat op de indicatorpagina.
               </li>
               <li>
-                Sommige indicator-ID’s komen in de bron dubbel voor; deze site geeft ze een unieke webadres-suffix.
+                Sommige indicator-ID’s komen in de bron twee keer voor. Deze site geeft ze een uniek webadres.
               </li>
-              <li>Persoonsnamen en interne notities uit de werksessies zijn niet overgenomen.</li>
+              <li>Persoonsnamen en interne notities uit de werksessies staan niet op deze site.</li>
             </ul>
           </section>
         </div>

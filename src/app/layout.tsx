@@ -4,7 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { ConceptBanner } from "@/components/concept-banner";
 import { MotionProvider } from "@/components/motion-provider";
 import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { SiteSidebar } from "@/components/site-sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
@@ -41,14 +41,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="nl"
       className={`${plex.variable} ${plexCondensed.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white">
+      <body className="min-h-full bg-white">
         <MotionProvider>
-        <TooltipProvider delay={150}>
-          <ConceptBanner />
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
-        </TooltipProvider>
+          <TooltipProvider delay={150}>
+            <div className="lg:flex">
+              <SiteSidebar />
+              <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+                <ConceptBanner />
+                <main className="flex-1">{children}</main>
+                <SiteFooter />
+              </div>
+            </div>
+          </TooltipProvider>
         </MotionProvider>
         <Analytics />
       </body>

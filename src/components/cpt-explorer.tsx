@@ -120,7 +120,7 @@ export function CptExplorer() {
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Het getal op een capability geeft aan in hoeveel van de zeven user stories die capability terugkomt.
+          Het getal op een functie geeft aan in hoeveel van de zeven user stories de functie voorkomt.
         </p>
       )}
     </div>

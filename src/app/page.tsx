@@ -52,13 +52,14 @@ export default function Home() {
             </HeroItem>
             <HeroItem>
               <h1 className="mt-3 max-w-4xl font-heading text-4xl font-semibold leading-[1.05] tracking-tight text-dmi-navy sm:text-6xl">
-                Slimme duurzame verstedelijking en mobiliteitsvernieuwing, meetbaar gemaakt
+                Indicatoren voor slimme duurzame verstedelijking en mobiliteitsvernieuwing
               </h1>
             </HeroItem>
             <HeroItem>
               <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-                Het register vertaalt de beleidsacties uit de Blauwdruk G40 naar monitoringsvragen en koppelt die
-                aan bestaande, landsdekkende indicatoren, inclusief bron, schaalniveau, actualiteit en geschiktheid.
+                Het register vertaalt de acties uit de Blauwdruk G40 naar monitoringsvragen. Per vraag zie je welke
+                bestaande, landsdekkende indicatoren antwoord geven. Bij elke indicator staan de bron, het
+                schaalniveau, de actualiteit en de geschiktheid.
               </p>
             </HeroItem>
             <HeroItem className="mt-8 flex flex-wrap gap-3">
@@ -99,7 +100,7 @@ export default function Home() {
       <Container className="space-y-16 py-12">
         <section>
           <h2 className="font-heading text-2xl font-semibold text-dmi-navy">Drie manieren om te zoeken</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Kies de ingang die past bij je vraag, of gebruik ⌘K om direct te zoeken.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Kies de ingang die past bij je vraag, of zoek met ⌘K.</p>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {ENTRIES.map((e, i) => (
               <Reveal key={e.href} delay={i * 0.08}>
@@ -146,10 +147,10 @@ export default function Home() {
             </ul>
           </div>
           <div className="min-w-0 rounded-2xl border border-dmi-gold/50 bg-[#fdf8ec] p-6">
-            <p className="dmi-tag text-[10px] text-[#7a5410]">Signaal richting data-aanbieders</p>
+            <p className="dmi-tag text-[10px] text-[#7a5410]">Signaal voor data-aanbieders</p>
             <h2 className="mt-1 font-heading text-xl font-semibold text-dmi-navy">{gewenst.length} gewenste indicatoren</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Duidelijke vraag vanuit de Blauwdruk G40, maar nog niet compleet of niet landsdekkend beschikbaar.
+              De Blauwdruk G40 vraagt om deze indicatoren, maar de data is nog niet compleet of niet landsdekkend.
             </p>
             <div className="mt-4 max-h-80 overflow-y-auto rounded-xl bg-white p-1">
               {gewenst.map((i) => (
@@ -165,8 +166,8 @@ export default function Home() {
         <section className="grid gap-4 md:grid-cols-3">
           {[
             { href: "/blauwdruk/matrix", icon: LayoutGrid, title: "Dekkingsmatrix", text: "Welke G40-acties zijn al goed te monitoren, en waar zitten de gaten?" },
-            { href: "/methodiek", icon: Workflow, title: "Proces & methodiek", text: "Hoe 300+ indicatoren zijn beoordeeld, en de tijdlijn richting v1.0." },
-            { href: "/user-stories", icon: Network, title: "User stories & CPT", text: "Wat het DMI-dashboard moet kunnen, gekoppeld aan digital twin-capabilities." },
+            { href: "/methodiek", icon: Workflow, title: "Proces & methodiek", text: "Hoe 300+ indicatoren zijn beoordeeld, en de tijdlijn naar versie 1.0." },
+            { href: "/user-stories", icon: Network, title: "User stories & CPT", text: "Wat het DMI-dashboard moet kunnen, gekoppeld aan functies uit de Digital Twin CPT." },
           ].map((c) => (
             <Link key={c.href} href={c.href} className="group flex gap-4 rounded-xl border border-border bg-white p-5 hover:border-dmi-blue-200 hover:shadow-dmi-md">
               <c.icon className="mt-0.5 size-5 shrink-0 text-dmi-blue" />
@@ -179,7 +180,7 @@ export default function Home() {
         </section>
 
         <p className="text-xs text-muted-foreground">
-          Gebaseerd op concept v{meta.pdfVersion}. Inhoud kan wijzigen na toetsing door de DMI Indicatoren community.
+          Gebaseerd op concept v{meta.pdfVersion}. De inhoud kan nog wijzigen na de toetsing door de DMI Indicatoren community.
         </p>
       </Container>
     </>

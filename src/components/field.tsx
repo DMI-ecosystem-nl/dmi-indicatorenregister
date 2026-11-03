@@ -14,7 +14,7 @@ export function Field({
     <div className={cn("min-w-0", className)}>
       <dt className="dmi-tag text-[10px] text-muted-foreground">{label}</dt>
       <dd className={cn("mt-1 text-sm text-dmi-navy", empty && "text-muted-foreground/70")}>
-        {empty ? "Niet bekend" : children}
+        {empty ? "Nog niet ingevuld" : children}
       </dd>
     </div>
   );

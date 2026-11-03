@@ -2,7 +2,10 @@
 
 import { motion } from "motion/react";
 
-/** Fade/slide a block in when it scrolls into view. */
+/**
+ * Slide a block up when it scrolls into view. Deliberately no opacity: the
+ * server HTML must stay readable (print, no-JS, crawlers).
+ */
 export function Reveal({
   children,
   delay = 0,
@@ -18,8 +21,8 @@ export function Reveal({
   return (
     <Comp
       className={className}
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ y: 14 }}
+      whileInView={{ y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.45, delay, ease: "easeOut" }}
     >

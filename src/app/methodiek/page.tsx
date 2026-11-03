@@ -12,9 +12,9 @@ export const metadata: Metadata = { title: "Proces & methodiek" };
 const STEPS = [
   { title: "Blauwdruk G40", text: "Beleidsacties uit de Blauwdruk G40 voor slimme duurzame verstedelijking en mobiliteitsvernieuwing." },
   { title: "Vertaling (fase I)", text: "Per actie: welke doelen (I), hoe adresseren we die (II) en welke data zijn nodig (III)?" },
-  { title: "Monitoringsvragen", text: `De behoefte is samengevat in ${totals.questions} monitoringsvragen, verdeeld over de DMI-domeinen.` },
-  { title: "Beoordeling", text: `${totals.indicators} bestaande indicatoren beoordeeld op geschiktheid, met expertsessies per domein.` },
-  { title: "Register", text: `${totals.register} indicatoren Goed of Gewenst in v${meta.pdfVersion}; getoetst door de community richting v1.0.` },
+  { title: "Monitoringsvragen", text: `${totals.questions} monitoringsvragen, verdeeld over de DMI-domeinen.` },
+  { title: "Beoordeling", text: `${totals.indicators} bestaande indicatoren beoordeeld, met expertsessies per domein.` },
+  { title: "Register", text: `${totals.register} indicatoren Goed of Gewenst in v${meta.pdfVersion}. De community toetst deze selectie voor versie 1.0.` },
 ];
 
 const CRITERIA = [
@@ -22,7 +22,7 @@ const CRITERIA = [
   "Relevantie binnen de scope van DMI",
   "Overlap met de Blauwdruk G40",
   "Beschikbaarheid van data",
-  "Landsdekkend én regionale cijfers",
+  "Landsdekkende en regionale cijfers",
   "Meest recente data",
   "Beheerder van de data",
   "Aanwezigheid van historie",
@@ -114,7 +114,7 @@ export default function MethodiekPage() {
         <section>
           <h2 className="mb-1 font-heading text-xl font-semibold text-dmi-navy">Indicatortypen: van context tot impact</h2>
           <p className="mb-5 text-sm text-muted-foreground">
-            Elke indicator is ingedeeld in een keten. Balk: aantal beoordeelde indicatoren per type; donker deel: opgenomen in het register.
+            Elke indicator heeft een type in de keten van context naar impact. Balk: aantal beoordeelde indicatoren per type. Donker deel: opgenomen in het register.
           </p>
           <div className="overflow-x-auto">
             <ol className="flex min-w-[760px] items-stretch gap-1.5">

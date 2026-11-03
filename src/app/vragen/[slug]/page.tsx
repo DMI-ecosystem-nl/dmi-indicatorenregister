@@ -75,11 +75,11 @@ async function VraagPageContent({ params }: { params: PageProps<"/vragen/[slug]"
             );
           })}
           <p className="text-xs text-muted-foreground">
-            Opname in het register volgt versie v{meta.pdfVersion}; ‘Beperkt’ en ‘Niet’ zijn beoordeelde
-            kandidaten die (nog) niet geschikt zijn. Open een indicator voor de toelichting.
+            Het register volgt versie v{meta.pdfVersion}. ‘Beperkt’ en ‘Niet’ zijn beoordeelde kandidaten die (nog)
+            niet geschikt zijn. Open een indicator voor de toelichting.
           </p>
         </div>
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
           {q.variaties && (
             <div className="rounded-xl border border-border bg-white p-5 shadow-dmi-sm">
               <h2 className="dmi-tag text-[10px] text-muted-foreground">Variaties op de vraag</h2>

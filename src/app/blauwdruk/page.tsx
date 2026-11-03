@@ -15,7 +15,7 @@ export default function BlauwdrukPage() {
         crumbs={[{ label: "Blauwdruk G40" }]}
         eyebrow="Ingang 2 · Beleid"
         title="Van Blauwdruk G40-actie naar indicator"
-        description="De Blauwdruk G40 voor slimme duurzame verstedelijking en mobiliteitsvernieuwing bevat zes actielijnen. Elke actie is vertaald naar doelen, een aanpak en benodigde data, en vervolgens naar monitoringsvragen en indicatoren."
+        description="De Blauwdruk G40 voor slimme duurzame verstedelijking en mobiliteitsvernieuwing heeft zes actielijnen. Elke actie is vertaald naar doelen, een aanpak en benodigde data. Daarna volgen de monitoringsvragen en indicatoren."
       >
         <div className="flex flex-wrap items-center gap-4">
           <Link
@@ -73,7 +73,7 @@ export default function BlauwdrukPage() {
           );
         })}
         <p className="text-xs text-muted-foreground">
-          De titels van de actielijnen zijn werktitels; het register bevat alleen de letter.
+          De titels van de actielijnen zijn werktitels. Het register bevat alleen de letter.
         </p>
       </Container>
     </>

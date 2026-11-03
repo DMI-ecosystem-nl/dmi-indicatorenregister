@@ -63,24 +63,11 @@ async function DomeinPageContent({ params }: { params: PageProps<"/domeinen/[slu
           </p>
         </div>
       </PageHeader>
-      <Container className="grid gap-8 py-8 lg:grid-cols-[220px_1fr]">
-        <nav aria-label="Andere domeinen" className="hidden lg:block">
-          <ul className="sticky top-20 space-y-0.5">
-            {domainOrder.map((c) => (
-              <li key={c}>
-                <Link
-                  href={`/domeinen/${domains[c].slug}`}
-                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
-                    c === d.code ? "bg-dmi-blue-100 font-medium text-dmi-navy" : "text-muted-foreground hover:bg-dmi-blue-050 hover:text-dmi-navy"
-                  }`}
-                >
-                  <DomainIcon code={c} className="size-4" /> {domains[c].short}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+      <Container className="py-8">
         <div className="space-y-4">
+          <h2 className="font-heading text-xl font-semibold text-dmi-navy">
+            Monitoringsvragen ({qs.length})
+          </h2>
           {qs.map(({ q, items }) => (
             <QuestionBlock key={q.id} question={q} items={items} />
           ))}

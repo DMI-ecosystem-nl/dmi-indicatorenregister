@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { BlueprintMatrix, type MatrixAction, type MatrixRow } from "@/components/blueprint-matrix";
 import { Container, PageHeader } from "@/components/page-header";
@@ -20,6 +21,13 @@ export default function MatrixPage() {
         codes: q.blauwdruk,
         register: items.filter((i) => i.inRegister).length,
         total: items.length,
+        indicators: items.map((i) => ({
+          slug: i.slug,
+          code: i.indeling ?? i.id,
+          name: i.name,
+          geschiktheid: i.geschiktheid,
+          inRegister: i.inRegister,
+        })),
       };
     })
     .sort((a, b) => domainOrder.indexOf(a.domain) - domainOrder.indexOf(b.domain) || a.id.localeCompare(b.id));
@@ -42,12 +50,16 @@ export default function MatrixPage() {
         description={
           <>
             Elke kolom is een actie uit de Blauwdruk G40, elke rij een monitoringsvraag. Een gekleurde cel betekent
-            dat de vraag uit die actie is afgeleid; de kleur toont de beste beschikbare indicator.{" "}
+            dat de vraag uit die actie komt. De kleur toont de beste beschikbare indicator.{" "}
             {gaps.length} van de {cols.length} acties hebben nog geen indicator met ‘Goed’.
           </>
         }
       />
       <Container className="py-8">
+        <p className="mb-4 rounded-lg border border-dmi-gold/50 bg-[#fdf8ec] px-3 py-2 text-sm text-dmi-navy md:hidden">
+          De matrix is breed. Bekijk deze op een groter scherm, of open de{" "}
+          <Link href="/blauwdruk" className="font-medium text-dmi-blue underline">lijst met acties</Link>.
+        </p>
         <BlueprintMatrix actions={cols} rows={rows} />
       </Container>
     </>

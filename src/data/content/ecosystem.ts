@@ -34,9 +34,9 @@ export const ecoNodes: Record<EcoNodeId, EcoNode> = {
     title: "Indicatorenregister",
     subtitle: "Beschikbare en gewenste indicatoren en metadata",
     body: [
-      "Het register geeft een overzicht van bestaande, landsdekkende indicatoren die samen het onderwerp slimme duurzame verstedelijking en mobiliteitsvernieuwing beschrijven.",
-      "Naast beschikbare indicatoren (‘Goed’) benoemt het register ook gewenste indicatoren (‘Gewenst’): duidelijke informatiebehoeften waarvoor nog geen complete of landsdekkende bron bestaat. Dat is een signaal richting data-aanbieders.",
-      "Het register wordt geplaatst op en in de PDX, zodat het vindbaar en koppelbaar is voor vraag én aanbod.",
+      "Het register geeft een overzicht van bestaande, landsdekkende indicatoren. Samen beschrijven zij slimme duurzame verstedelijking en mobiliteitsvernieuwing.",
+      "Het register noemt ook gewenste indicatoren (‘Gewenst’). Daarvoor is een duidelijke informatiebehoefte, maar nog geen complete of landsdekkende bron. Dat is een signaal voor data-aanbieders.",
+      "Het register komt op de PDX. Daar kunnen gemeenten en data-aanbieders het vinden en gebruiken.",
     ],
     link: { href: "/indicatoren", label: "Naar de indicatoren" },
   },
@@ -46,8 +46,8 @@ export const ecoNodes: Record<EcoNodeId, EcoNode> = {
     subtitle: "Platform voor data-uitwisseling en transacties",
     body: [
       "De PDX verbindt vraag en aanbod: gemeenten plaatsen informatiebehoeften, aanbieders bieden datasets en indicatoren aan.",
-      "Via de PDX lopen transacties en data-uitwisseling. Beschikbare indicatoren en data komen zo terug bij gemeenten.",
-      "Het indicatorenregister op de PDX biedt aanknopingspunten voor koppelingen met andere data-aanbieders.",
+      "Transacties en data-uitwisseling lopen via de PDX. Zo komen beschikbare indicatoren en data bij gemeenten.",
+      "Het register op de PDX laat data-aanbieders zien welke indicatoren gemeenten nodig hebben.",
     ],
   },
   vraag: {
@@ -66,7 +66,7 @@ export const ecoNodes: Record<EcoNodeId, EcoNode> = {
     subtitle: "Marktpartijen, dataleveranciers en kennisinstellingen",
     body: [
       "Marktpartijen, dataleveranciers en kennisinstellingen bieden datasets en indicatoren aan.",
-      "Gewenste indicatoren in het register laten zien waar behoefte bestaat en nieuwe of verrijkte data waarde kan toevoegen.",
+      "De gewenste indicatoren in het register laten zien waar nog data nodig is.",
     ],
     link: { href: "/indicatoren?g=gewenst", label: "Bekijk gewenste indicatoren" },
   },
@@ -75,8 +75,8 @@ export const ecoNodes: Record<EcoNodeId, EcoNode> = {
     title: "DMI-dashboard",
     subtitle: "Integrale monitoring G40 Blauwdruk, landelijk vergelijken",
     body: [
-      "Het DMI-dashboard gebruikt de indicatoren uit het register voor integrale monitoring van de Blauwdruk G40 en om gemeenten landelijk te vergelijken.",
-      "De MVP-user stories zijn gekoppeld aan beleidsbouwblokken en capabilities uit de Digital Twin Capabilities Periodic Table.",
+      "Het DMI-dashboard gebruikt de indicatoren uit het register. Het dashboard monitort de Blauwdruk G40 integraal en vergelijkt gemeenten landelijk.",
+      "De user stories van de eerste versie (MVP) zijn gekoppeld aan beleidsbouwblokken en aan functies uit de Digital Twin Capabilities Periodic Table.",
     ],
     link: { href: "/user-stories", label: "Naar de user stories" },
   },

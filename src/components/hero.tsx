@@ -18,7 +18,7 @@ export function HeroItem({ children, className }: { children: React.ReactNode; c
   return (
     <motion.div
       className={className}
-      variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }}
+      variants={{ hidden: { y: 12 }, show: { y: 0, transition: { duration: 0.45 } } }}
     >
       {children}
     </motion.div>

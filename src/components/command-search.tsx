@@ -21,11 +21,21 @@ const GROUPS: { kind: SearchItem["kind"]; label: string; icon: typeof Search }[]
   { kind: "actie", label: "Blauwdruk G40-acties", icon: Landmark },
 ];
 
-export function CommandSearch({ items }: { items: SearchItem[] }) {
+export function CommandSearch({
+  items,
+  listen = false,
+  variant = "sidebar",
+}: {
+  items: SearchItem[];
+  /** Only one instance should own the ⌘K shortcut. */
+  listen?: boolean;
+  variant?: "sidebar" | "icon";
+}) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    if (!listen) return;
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -34,21 +44,25 @@ export function CommandSearch({ items }: { items: SearchItem[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [listen]);
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(true)}
-        className="h-8 gap-2 text-muted-foreground sm:w-56 sm:justify-start"
-        aria-label="Zoeken"
-      >
-        <Search className="size-4" />
-        <span className="hidden sm:inline">Zoek in het register…</span>
-        <kbd className="ml-auto hidden rounded border bg-muted px-1.5 font-mono text-[10px] sm:inline">⌘K</kbd>
-      </Button>
+      {variant === "icon" ? (
+        <Button variant="outline" size="icon" onClick={() => setOpen(true)} aria-label="Zoeken">
+          <Search className="size-4" />
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          onClick={() => setOpen(true)}
+          className="h-9 w-full justify-start gap-2 text-muted-foreground"
+        >
+          <Search className="size-4" />
+          <span>Zoek in het register…</span>
+          <kbd className="ml-auto rounded border bg-muted px-1.5 font-mono text-[10px]">⌘K</kbd>
+        </Button>
+      )}
       <CommandDialog
         open={open}
         onOpenChange={setOpen}

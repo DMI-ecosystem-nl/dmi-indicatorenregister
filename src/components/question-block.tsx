@@ -52,7 +52,7 @@ export function QuestionBlock({
         {rest.length > 0 && (
           <details className="group/details mt-1 rounded-lg">
             <summary className="cursor-pointer list-none px-3 py-1.5 text-xs text-dmi-blue hover:underline">
-              <span className="group-open/details:hidden">Toon {rest.length} beoordeelde kandidaten die niet zijn opgenomen</span>
+              <span className="group-open/details:hidden">Toon {rest.length} niet-opgenomen kandidaten</span>
               <span className="hidden group-open/details:inline">Verberg niet-opgenomen kandidaten</span>
             </summary>
             <div className="mt-1 border-t border-dashed border-border pt-1 opacity-90">

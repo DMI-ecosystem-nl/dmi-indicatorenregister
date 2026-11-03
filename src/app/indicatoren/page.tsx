@@ -16,8 +16,8 @@ export default function IndicatorenPage() {
         description={
           <>
             {totals.register} indicatoren in het register (Goed of Gewenst), gekozen uit {totals.indicators}{" "}
-            beoordeelde indicatoren. Kies <em>Alle beoordeelde</em> om ook de afgewezen kandidaten te zien,
-            met de reden waarom.
+            beoordeelde indicatoren. Kies <em>Alle beoordeelde</em> om ook de niet-opgenomen kandidaten te zien,
+            met de reden.
           </>
         }
       />

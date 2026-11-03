@@ -143,3 +143,53 @@ export const beleidsbouwblokken: { name: string; mvp: boolean }[] = [
 
 export const cptConclusion =
   "De MVP van het DMI-dashboard leunt vooral op de beleidsbouwblokken Visualiseren, Integreren, Analyseren, Tijdreizen en Vertrouwen. Deze bouwblokken ondersteunen de kern van de MVP: integraal overzicht, trends, transparantie en vergelijken. Meer geavanceerde bouwblokken zoals Voorspellen, Simuleren en Beleven passen beter bij latere ontwikkelfasen.";
+
+// ---------------------------------------------------------------- explanation
+
+/** Plain-language description per CPT group, plus the beleidsbouwblokken that the
+ *  figure "Visualisatie beleidsbouwblokken op het CPT" places on that group. */
+export const cptGroupInfo: { group: CptGroup; title: string; text: string; blocks: string[] }[] = [
+  {
+    group: "DS",
+    title: "Data Services",
+    text: "Data verzamelen, opslaan, samenvoegen en verrijken. Ook het bewaren van historie en het beheren van modellen en definities.",
+    blocks: ["Ontsluiten", "Bewerken", "Zoeken/vinden", "Tijdreizen"],
+  },
+  {
+    group: "IR",
+    title: "Integration",
+    text: "De digital twin koppelen aan andere systemen: API’s, sensoren (IoT), bedrijfssystemen en andere digital twins.",
+    blocks: ["Reproduceren", "Meten/Aansturen", "Integreren"],
+  },
+  {
+    group: "IC",
+    title: "Intelligence",
+    text: "Rekenen met de data: analyses, rekenregels, voorspellingen, simulaties, meldingen en zoeken.",
+    blocks: ["Analyseren", "Voorspellen", "Orkestratie", "Simuleren", "Rekenen"],
+  },
+  {
+    group: "UX",
+    title: "User Experience",
+    text: "De informatie tonen en bruikbaar maken: dashboards, visualisaties, 3D en extended reality (XR).",
+    blocks: ["Visualiseren", "Beleven"],
+  },
+  {
+    group: "MG",
+    title: "Management",
+    text: "Het systeem en de data beheren: data governance, systeembewaking, logging en apparaatbeheer.",
+    blocks: [],
+  },
+  {
+    group: "TW",
+    title: "Trustworthiness",
+    text: "De betrouwbaarheid borgen: verantwoordelijkheid, veiligheid, privacy, beveiliging en weerbaarheid.",
+    blocks: ["Vertrouwen", "Identificeren"],
+  },
+];
+
+export const cptFacts = {
+  publisher: "Digital Twin Consortium",
+  released: "maart 2022",
+  version: "versie 1.1 (eind 2024)",
+  url: "https://www.digitaltwinconsortium.org",
+};

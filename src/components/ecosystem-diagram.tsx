@@ -95,9 +95,6 @@ export function EcosystemDiagram() {
                   y={f.ly}
                   textAnchor="middle"
                   className="fill-dmi-navy text-[13px]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: f.delay + 0.3 }}
                 >
                   <tspan x={f.lx} dy="0">{f.label[0]}</tspan>
                   <tspan x={f.lx} dy="14">{f.label[1]}</tspan>
@@ -121,8 +118,8 @@ export function EcosystemDiagram() {
                 onClick={() => setSelected(b.id)}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setSelected(b.id))}
                 className="cursor-pointer outline-none [&:focus-visible>rect]:stroke-[4]"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 12 }}
+                animate={{ y: 0 }}
                 transition={{ duration: 0.4, delay: i * 0.07 }}
                 whileHover={{ scale: 1.015 }}
                 style={{ transformOrigin: `${b.x + b.w / 2}px ${b.y + b.h / 2}px` }}
@@ -214,8 +211,8 @@ export function EcosystemDiagram() {
       </div>
 
       {/* Explanation */}
-      <aside className="lg:sticky lg:top-20 lg:self-start">
-        <AnimatePresence mode="wait">
+      <aside className="lg:sticky lg:top-6 lg:self-start">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={node.id}
             initial={{ opacity: 0, x: 12 }}
