@@ -68,11 +68,11 @@ export function CommandSearch({
         onOpenChange={setOpen}
         title="Zoeken"
         description="Zoek indicatoren, monitoringsvragen en G40-acties"
-        className="sm:max-w-xl"
+        className="top-1/2 -translate-y-1/2 sm:max-w-xl"
       >
         <Command>
           <CommandInput placeholder="Zoek op indicator, vraag, bron of code…" />
-          <CommandList className="max-h-[60vh]">
+          <CommandList className="max-h-[min(50vh,26rem)]">
             <CommandEmpty>Geen resultaten.</CommandEmpty>
             {GROUPS.map((g) => (
               <CommandGroup key={g.kind} heading={g.label}>
