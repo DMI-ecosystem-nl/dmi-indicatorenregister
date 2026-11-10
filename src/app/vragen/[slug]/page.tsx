@@ -75,7 +75,7 @@ async function VraagPageContent({ params }: { params: PageProps<"/vragen/[slug]"
             );
           })}
           <p className="text-xs text-muted-foreground">
-            Het register volgt versie v{meta.pdfVersion}. ‘Beperkt’ en ‘Niet’ zijn beoordeelde kandidaten die (nog)
+            Het register volgt versie v{meta.version}. ‘Beperkt’ en ‘Niet’ zijn beoordeelde kandidaten die (nog)
             niet geschikt zijn. Open een indicator voor de toelichting.
           </p>
         </div>

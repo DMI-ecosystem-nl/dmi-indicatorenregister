@@ -75,9 +75,17 @@ export function domainStats() {
   });
 }
 
-/** Normalise the two free-text scale columns into one facet value. */
+/** Assessment in the base Excel (before later versions re-assessed it). */
+export function originalGeschiktheid(indicator: Indicator): Geschiktheid {
+  const first = indicator.changes.find((c) => c.field === "geschiktheid");
+  return (first?.from as Geschiktheid | undefined) ?? indicator.geschiktheid;
+}
+
+/** Normalise the free-text scale columns into one facet value. */
 export function schaalOf(indicator: Indicator): Schaal {
   const text = `${indicator.laagsteSchaal ?? ""} ${indicator.schaalniveau ?? ""}`.toLowerCase();
+  // "anders" + raster/punt data (Type data, v0.94) is a grid or point layer.
+  if (/^anders\b/.test(text.trim()) && /raster|punt/.test(indicator.typeData ?? "")) return "raster";
   if (/\d+\s*x\s*\d+|punt|raster/.test(text)) return "raster";
   if (text.includes("gebouw")) return "gebouw";
   if (/pc\s?[46]/.test(text)) return "postcode";

@@ -5,7 +5,7 @@ import type { DomainCode, Geschiktheid, Indicator } from "@/data/types";
 export type Scope = "register" | "alle";
 
 export interface Filters {
-  /** "register" = the v0.91 register (Goed + Gewenst), "alle" = every assessed indicator. */
+  /** "register" = the current register (Goed + Gewenst), "alle" = every assessed indicator. */
   scope: Scope;
   /** Empty = no restriction within the scope. */
   geschiktheid: Geschiktheid[];
@@ -48,8 +48,12 @@ function haystack(i: Indicator): string {
     i.cluster,
     i.bron,
     i.bronLabel,
+    i.beheerder,
     i.dataverzamelaar,
     i.toelichting,
+    i.meetmethode,
+    // Earlier names, so old bookmarks and notes still find the indicator.
+    ...i.changes.filter((c) => c.field === "name").map((c) => c.from),
     i.blauwdruk.join(" "),
   ]
     .filter(Boolean)

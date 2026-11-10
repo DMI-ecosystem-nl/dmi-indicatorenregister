@@ -22,7 +22,7 @@ export function SiteFooter() {
           <img src="/dmi-logo.svg" alt="DMI Ecosysteem" className="h-9" />
           <p className="max-w-sm text-sm text-muted-foreground">
             Indicatorenregister voor slimme duurzame verstedelijking en mobiliteitsvernieuwing.
-            Concept v{meta.pdfVersion} ({formatDate(meta.pdfDate)}).
+            Concept v{meta.version} ({formatDate(meta.versionDate)}).
           </p>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">

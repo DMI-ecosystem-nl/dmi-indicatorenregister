@@ -5,11 +5,18 @@ import { Container, PageHeader } from "@/components/page-header";
 import { formatDate } from "@/lib/format";
 import { indicators, meta, totals } from "@/lib/selectors";
 
+/** Count indicators with at least one change of this kind in this version. */
+function changed(version: string, field: string) {
+  return indicators.filter((i) => i.changes.some((c) => c.version === version && c.field === field)).length;
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
 export const metadata: Metadata = { title: "Over dit register" };
 
 export default function OverPage() {
-  const moved = indicators.filter((i) => i.domainV09).length;
-  const changed = indicators.filter((i) => i.geschiktheidV09).length;
+  const v = meta.version;
+  const pv = meta.pdfVersion;
   return (
     <>
       <PageHeader
@@ -29,7 +36,7 @@ export default function OverPage() {
           <section className="space-y-3">
             <h2 className="font-heading text-xl font-semibold text-dmi-navy">Status</h2>
             <p>
-              Versie <strong>v{meta.pdfVersion}</strong> ({formatDate(meta.pdfDate)}) is een concept. Versie 1.0 van het
+              Versie <strong>v{meta.version}</strong> ({formatDate(meta.versionDate)}) is een concept. Versie 1.0 van het
               register en het dashboard komt op <strong>2 december 2026</strong>. In 2027 volgen de inrichting van
               organisatie en beheer en het testen in de praktijk.
             </p>
@@ -38,13 +45,25 @@ export default function OverPage() {
             <h2 className="font-heading text-xl font-semibold text-dmi-navy">Verwerking van de bronnen</h2>
             <ul className="list-disc space-y-1.5 pl-5">
               <li>
-                De metadata komt uit het Excel-register v{meta.excelVersion} ({formatDate(meta.excelDate)}). De selectie,
-                indelingscodes (A01…) en geschiktheid volgen de nieuwere printout v{meta.pdfVersion}.
+                De basis is het Excel-register v{meta.excelVersion} ({formatDate(meta.excelDate)}): alle beoordeelde
+                indicatoren, de Blauwdruk G40-vertaling en de monitoringsvragen.
               </li>
               <li>
-                In v{meta.pdfVersion} zijn {moved} indicatoren naar een ander DMI-domein verplaatst en is bij {changed}{" "}
-                {changed === 1 ? "indicator" : "indicatoren"} de geschiktheid aangepast; dit staat op de indicatorpagina.
+                De printout v{pv} ({formatDate(meta.pdfDate)}) bepaalt welke indicatoren ‘Gewenst’ zijn. In v{pv} zijn{" "}
+                {plural(changed(pv, "domain"), "indicator", "indicatoren")} naar een ander DMI-domein verplaatst en is bij{" "}
+                {plural(changed(pv, "geschiktheid"), "indicator", "indicatoren")} de geschiktheid aangepast.
               </li>
+              <li>
+                De uitdraai v{v} ({formatDate(meta.versionDate)}) bepaalt welke indicatoren ‘Goed’ zijn. Hieruit komen ook
+                de registercodes (A01…) en de nieuwe metadata: beheerder, meetmethode, normen, type data, dekking en
+                model of meting. In v{v} zijn {plural(changed(v, "added"), "indicator", "indicatoren")} toegevoegd,{" "}
+                {plural(changed(v, "geschiktheid"), "indicator", "indicatoren")} opgewaardeerd naar ‘Goed’,{" "}
+                {plural(changed(v, "domain"), "indicator", "indicatoren")} naar een ander domein verplaatst en{" "}
+                {plural(changed(v, "name"), "indicator", "indicatoren")} hernoemd.{" "}
+                {plural(changed(v, "register"), "indicator", "indicatoren")} die eerder ‘Goed’ waren, staan niet meer in de
+                uitdraai en daarom niet meer in het register.
+              </li>
+              <li>Elke wijziging staat op de pagina van de indicator.</li>
               <li>
                 Sommige indicator-ID’s komen in de bron twee keer voor. Deze site geeft ze een uniek webadres.
               </li>
@@ -74,8 +93,20 @@ export default function OverPage() {
           <div className="rounded-xl border border-border bg-white p-5 shadow-dmi-sm">
             <h2 className="dmi-tag text-[10px] text-muted-foreground">Bronbestanden</h2>
             <ul className="mt-3 space-y-2 text-sm">
-              <li className="flex gap-2"><FileSpreadsheet className="size-4 shrink-0 text-[#2f7d4f]" /> DMI Indicatorenregister – werkbaar concept v{meta.excelVersion}</li>
-              <li className="flex gap-2"><FileText className="size-4 shrink-0 text-[#a23b38]" /> DMI indicatorenregister v{meta.pdfVersion} concept</li>
+              {meta.sources.map((s) => {
+                const Icon = s.format === "pdf" ? FileText : FileSpreadsheet;
+                return (
+                  <li key={s.version} className="flex gap-2">
+                    <Icon className={s.format === "pdf" ? "size-4 shrink-0 text-[#a23b38]" : "size-4 shrink-0 text-[#2f7d4f]"} />
+                    <span>
+                      {s.title} v{s.version}
+                      <span className="block text-xs text-muted-foreground">
+                        {formatDate(s.date)} · {s.role}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
               <li className="flex gap-2"><FileText className="size-4 shrink-0 text-dmi-blue" /> CPT-koppeling user stories</li>
             </ul>
           </div>

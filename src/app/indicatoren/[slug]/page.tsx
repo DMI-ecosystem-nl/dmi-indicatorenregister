@@ -1,13 +1,14 @@
 import { Suspense } from "react";
 import { PageSkeleton } from "@/components/page-skeleton";
 import type { Metadata } from "next";
+import type { Indicator, IndicatorChange } from "@/data/types";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ExternalLink, Info, Lightbulb } from "lucide-react";
+import { ExternalLink, FileText, History, Info, Lightbulb, Ruler, Target } from "lucide-react";
 import { BackLink } from "@/components/back-link-server";
 import { BlauwdrukChip } from "@/components/blauwdruk-chip";
 import { DomainBadge } from "@/components/domain-badge";
-import { Field } from "@/components/field";
+import { Field, Prose } from "@/components/field";
 import { GeschiktheidBadge } from "@/components/geschiktheid-badge";
 import { IndicatorCard } from "@/components/indicator-card";
 import { Container } from "@/components/page-header";
@@ -24,6 +25,7 @@ import {
   indicators,
   indicatorsOf,
   meta,
+  originalGeschiktheid,
   schaalOf,
 } from "@/lib/selectors";
 
@@ -39,6 +41,33 @@ export async function generateMetadata({ params }: PageProps<"/indicatoren/[slug
 
 const jaNee = (v: string | null) =>
   v ? { ja: "Ja", nee: "Nee", beperkt: "Beperkt", onduidelijk: "Onduidelijk" }[v] ?? v : null;
+
+const capitalise = (v: string | null) => (v ? v[0].toUpperCase() + v.slice(1) : null);
+
+function changeText(c: IndicatorChange) {
+  switch (c.field) {
+    case "added":
+      return <>Nieuw toegevoegd aan het register.</>;
+    case "register":
+      return <>Staat niet meer in de selectie ‘Goed’ en daarom niet meer in het register.</>;
+    case "name":
+      return <>Naam was <strong>‘{c.from}’</strong>.</>;
+    case "geschiktheid":
+      return (
+        <>
+          Geschiktheid van <strong>{geschiktheidLabels[c.from as Indicator["geschiktheid"]]}</strong> naar{" "}
+          <strong>{geschiktheidLabels[c.to as Indicator["geschiktheid"]]}</strong>.
+        </>
+      );
+    case "domain":
+      return (
+        <>
+          Domein van <strong>{c.from}. {domains[c.from as Indicator["domain"]].label}</strong> naar{" "}
+          <strong>{c.to}. {domains[c.to as Indicator["domain"]].label}</strong>.
+        </>
+      );
+  }
+}
 
 export default function IndicatorPage({ params }: PageProps<"/indicatoren/[slug]">) {
   return (
@@ -62,6 +91,9 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
   const sparse = metaFields.filter((v) => v === null).length >= 4;
   const host = hostOf(i.bronUrl);
   const schaal = schaalOf(i);
+  // The toelichting and "Benodigd voor Goed" were written for the v0.9 assessment.
+  const assessedAs = originalGeschiktheid(i);
+  const reassessed = assessedAs !== i.geschiktheid;
 
   return (
     <>
@@ -75,9 +107,9 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
             {i.indeling && <span className="dmi-tag text-[11px] text-muted-foreground">{i.id}</span>}
             <GeschiktheidBadge value={i.geschiktheid} size="md" />
             {i.inRegister ? (
-              <span className="text-xs text-dmi-navy/70">Opgenomen in register v{meta.pdfVersion}</span>
+              <span className="text-xs text-dmi-navy/70">Opgenomen in register v{meta.version}</span>
             ) : (
-              <span className="text-xs text-muted-foreground">Niet opgenomen in register v{meta.pdfVersion}</span>
+              <span className="text-xs text-muted-foreground">Niet opgenomen in register v{meta.version}</span>
             )}
           </div>
           <h1 className="mt-3 max-w-4xl font-heading text-3xl font-semibold tracking-tight text-dmi-navy sm:text-4xl">
@@ -109,7 +141,7 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
 
       <Container className="grid gap-8 py-8 lg:grid-cols-[1fr_340px]">
         <div className="space-y-8">
-          {(i.toelichting || i.benodigdVoorGoed) && (
+          {(i.toelichting || i.benodigdVoorGoed || i.changes.length > 0) && (
             <section className="space-y-3">
               <h2 className="font-heading text-lg font-semibold text-dmi-navy">Beoordeling</h2>
               {i.toelichting && (
@@ -117,13 +149,14 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
                   <Info className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
                   <div>
                     <p className="text-xs font-medium text-muted-foreground">
-                      Toelichting geschiktheid ({geschiktheidLabels[i.geschiktheid]})
+                      Toelichting geschiktheid ({geschiktheidLabels[assessedAs]}
+                      {reassessed && `, v${meta.excelVersion}`})
                     </p>
                     <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{i.toelichting}</p>
                   </div>
                 </div>
               )}
-              {i.benodigdVoorGoed && (
+              {i.benodigdVoorGoed && !(reassessed && i.geschiktheid === "goed") && (
                 <div className="flex gap-3 rounded-xl border border-dmi-gold/50 bg-[#fdf6e6] p-4">
                   <Lightbulb className="mt-0.5 size-4 shrink-0 text-[#8a5a12]" />
                   <div>
@@ -132,23 +165,20 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
                   </div>
                 </div>
               )}
-              {(i.geschiktheidV09 || i.domainV09) && (
+              {i.changes.length > 0 && (
                 <div className="flex gap-3 rounded-xl border border-border bg-dmi-blue-050 p-4 text-sm">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
-                  <p>
-                    Gewijzigd in v{meta.pdfVersion}:{" "}
-                    {i.geschiktheidV09 && (
-                      <>
-                        geschiktheid was <strong>{geschiktheidLabels[i.geschiktheidV09]}</strong>
-                        {i.domainV09 ? "; " : "."}
-                      </>
-                    )}
-                    {i.domainV09 && (
-                      <>
-                        domein was <strong>{i.domainV09}. {domains[i.domainV09].label}</strong>.
-                      </>
-                    )}
-                  </p>
+                  <History className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground">Wijzigingen sinds v{meta.excelVersion}</p>
+                    <ul className="mt-1.5 space-y-1">
+                      {i.changes.map((c, n) => (
+                        <li key={n} className="flex gap-2">
+                          <span className="dmi-tag mt-0.5 shrink-0 text-[10px] text-dmi-blue">v{c.version}</span>
+                          <span>{changeText(c)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
             </section>
@@ -163,6 +193,7 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
             )}
             <dl className="grid gap-x-6 gap-y-5 rounded-xl border border-border bg-white p-5 sm:grid-cols-2 lg:grid-cols-3">
               <Field label="Dashboard / platform">{i.bron}</Field>
+              <Field label="Beheerder">{i.beheerder}</Field>
               <Field label="Dataverzamelaar">{i.dataverzamelaar}</Field>
               <Field label="Indicatortype">
                 {i.type !== null ? `${i.type}. ${indicatorTypeLabel(i.type)}` : null}
@@ -177,6 +208,9 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
                   </>
                 ) : null}
               </Field>
+              <Field label="Type data">{capitalise(i.typeData)}</Field>
+              <Field label="Dekking">{capitalise(i.dekking)}</Field>
+              <Field label="Model of meting">{capitalise(i.modelMeting)}</Field>
               <Field label="Frequentie">{i.frequentie}</Field>
               <Field label="Meest recent jaar">{i.meestRecentJaar}</Field>
               <Field label="Historie">
@@ -187,8 +221,36 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
               <Field label="Openbaar toegankelijk">{jaNee(i.openbaar)}</Field>
               <Field label="Data vrij te gebruiken">{jaNee(i.vrijGebruik)}</Field>
               <Field label="Voorwaarden">{i.voorwaarden}</Field>
+              <Field label="Bewerking nodig">
+                {i.bewerkingNodig === null ? null : i.bewerkingNodig ? "Ja" : "Nee"}
+              </Field>
             </dl>
           </section>
+
+          {(i.meetmethode || i.norm) && (
+            <section className="space-y-3">
+              <h2 className="font-heading text-lg font-semibold text-dmi-navy">Meetmethode en norm</h2>
+              {i.meetmethode && (
+                <div className="flex gap-3 rounded-xl border border-border bg-white p-4">
+                  <Ruler className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground">Meetmethode</p>
+                    <Prose text={i.meetmethode} className="mt-1" />
+                  </div>
+                </div>
+              )}
+              {i.norm && (
+                <div className="flex gap-3 rounded-xl border border-border bg-white p-4">
+                  <Target className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
+                  <dl className="grid min-w-0 flex-1 gap-x-6 gap-y-3 sm:grid-cols-3">
+                    <Field label="Normwaarde">{i.norm.waarde}</Field>
+                    <Field label="Normjaar">{i.norm.jaar}</Field>
+                    <Field label="Normbron">{i.norm.bron}</Field>
+                  </dl>
+                </div>
+              )}
+            </section>
+          )}
 
           {siblings.length > 0 && question && (
             <section>
@@ -229,6 +291,20 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
               <p className="mt-2 text-sm text-muted-foreground">
                 {i.bronLabel ?? "Geen bronlink beschikbaar in het register."}
               </p>
+            )}
+            {i.bronBeschrijving && (
+              <a
+                href={i.bronBeschrijvingUrl ?? undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 flex items-start gap-2 text-sm text-dmi-blue hover:underline"
+              >
+                <FileText className="mt-0.5 size-4 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block text-xs text-muted-foreground">Beschrijving van de bron</span>
+                  {i.bronBeschrijving}
+                </span>
+              </a>
             )}
           </div>
           {i.blauwdruk.length > 0 && (

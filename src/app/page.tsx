@@ -180,7 +180,7 @@ export default function Home() {
         </section>
 
         <p className="text-xs text-muted-foreground">
-          Gebaseerd op concept v{meta.pdfVersion}. De inhoud kan nog wijzigen na de toetsing door de DMI Indicatoren community.
+          Gebaseerd op concept v{meta.version}. De inhoud kan nog wijzigen na de toetsing door de DMI Indicatoren community.
         </p>
       </Container>
     </>

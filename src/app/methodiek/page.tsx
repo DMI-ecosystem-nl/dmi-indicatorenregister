@@ -14,7 +14,7 @@ const STEPS = [
   { title: "Vertaling (fase I)", text: "Per actie: welke doelen (I), hoe adresseren we die (II) en welke data zijn nodig (III)?" },
   { title: "Monitoringsvragen", text: `${totals.questions} monitoringsvragen, verdeeld over de DMI-domeinen.` },
   { title: "Beoordeling", text: `${totals.indicators} bestaande indicatoren beoordeeld, met expertsessies per domein.` },
-  { title: "Register", text: `${totals.register} indicatoren Goed of Gewenst in v${meta.pdfVersion}. De community toetst deze selectie voor versie 1.0.` },
+  { title: "Register", text: `${totals.register} indicatoren Goed of Gewenst in v${meta.version}. De community toetst deze selectie voor versie 1.0.` },
 ];
 
 const CRITERIA = [
@@ -57,6 +57,7 @@ export default function MethodiekPage() {
   const timeline = [
     ...meta.timeline.map((t) => ({ ...t, future: false })),
     { date: meta.pdfDate, title: `Concept v${meta.pdfVersion} (register-printout)`, future: false },
+    { date: meta.versionDate, title: `Concept v${meta.version} (uitdraai indicatoren ‘Goed’)`, future: false },
     { date: "2026-12-02", title: "Oplevering versie 1.0 indicatorenregister en dashboard", future: true },
   ].sort((a, b) => a.date.localeCompare(b.date));
 

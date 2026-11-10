@@ -39,7 +39,7 @@ function ConceptCard() {
       className="block rounded-xl bg-dmi-navy p-3 text-xs text-white/85 transition-colors hover:bg-dmi-blue"
     >
       <span className="flex items-center gap-1.5 font-semibold text-dmi-gold">
-        <FlaskConical className="size-3.5" /> Concept v{meta.pdfVersion}
+        <FlaskConical className="size-3.5" /> Concept v{meta.version}
       </span>
       <span className="mt-1 block leading-relaxed">
         Werkbaar concept, in toetsing bij de DMI Indicatoren community. Versie 1.0 komt op 2 december 2026.

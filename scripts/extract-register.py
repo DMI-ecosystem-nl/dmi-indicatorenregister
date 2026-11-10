@@ -17,6 +17,14 @@ Sources
 * PDF "DMI indicatorenregister v0.91 concept" — newer printout of the register
   (Goed + Gewenst only). Overlays the current geschiktheid and the "Indeling"
   code (A01 ...) onto the Excel records.
+* Excel "Uitdraai 0.94 DMI indicatorenregister" — newest printout of every
+  indicator assessed 'Goed', with full metadata (meetmethode, norm, dekking,
+  type data, model/meting, beheerder ...). It is authoritative for the Goed
+  selection: it overrides the metadata of matched records, adds new indicators
+  and takes previously-Goed indicators that are missing from it out of the
+  register. Gewenst still follows v0.91.
+
+Every overlay records what it changed in the indicator's `changes` list.
 
 Columns holding personal names or informal session notes (Kevin/Eric,
 Ingevoerd door, expert-session notes) are deliberately not exported.
@@ -58,7 +66,9 @@ def warn(msg: str) -> None:
 
 
 def find_source(pattern: str) -> Path:
-    matches = sorted(DOCS.glob(pattern))
+    import fnmatch
+
+    matches = sorted(p for p in DOCS.iterdir() if fnmatch.fnmatch(p.name.lower(), pattern.lower()))
     if not matches:
         sys.exit(f"No source matching {pattern!r} in {DOCS}")
     return matches[-1]
@@ -133,6 +143,33 @@ def slugify(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
+def link_cell(cell) -> tuple[str | None, str | None]:
+    """(url, label) of a cell holding a hyperlink and/or a pasted URL.
+
+    openpyxl drops the #fragment of hyperlink targets (CBS/RIVM statline
+    deep links live there), so a URL typed in the cell text wins when it
+    extends the hyperlink target.
+    """
+    text = clean(cell.value)
+    target = cell.hyperlink.target if cell.hyperlink and cell.hyperlink.target else None
+    embedded = re.search(r"https?://\S+", text or "")
+    url = target
+    if embedded:
+        typed = embedded.group(0).rstrip(").,;")
+        if not url or typed.startswith(url.split("#")[0].rstrip("/")):
+            url = typed
+    label = text
+    if label and embedded:
+        label = clean(label.replace(embedded.group(0), "")) or re.sub(
+            r"^https?://(www\.)?([^/]+).*$", r"\2", embedded.group(0)
+        )
+    return url, label
+
+
+def change(ind: dict, version: str, field: str, old, new) -> None:
+    ind["changes"].append({"version": version, "field": field, "from": old, "to": new})
+
+
 # --------------------------------------------------------------------------- Excel
 
 
@@ -171,17 +208,7 @@ def read_indicators(wb) -> list[dict]:
             warn(f"{ind_id}: unknown domain {col(row, 'DMI-domein')!r}")
             continue
 
-        bron_cell = row[header["IND_Brondata"]]
-        bron_text = clean(bron_cell.value)
-        bron_url = bron_cell.hyperlink.target if bron_cell.hyperlink and bron_cell.hyperlink.target else None
-        embedded = re.search(r"https?://\S+", bron_text or "")
-        if not bron_url and embedded:
-            bron_url = embedded.group(0).rstrip(").,;")
-        bron_label = bron_text
-        if bron_label and embedded:
-            bron_label = clean(bron_label.replace(embedded.group(0), "")) or re.sub(
-                r"^https?://(www\.)?([^/]+).*$", r"\2", embedded.group(0)
-            )
+        bron_url, bron_label = link_cell(row[header["IND_Brondata"]])
 
         hist_raw = clean(col(row, "Historie"))
         historie = None
@@ -196,14 +223,13 @@ def read_indicators(wb) -> list[dict]:
                 "indeling": None,
                 "name": name,
                 "geschiktheid": g,
-                "geschiktheidV09": None,
                 "inRegister": False,
+                "changes": [],
                 "toelichting": clean(col(row, "Toelichting geschiktheid")),
                 "benodigdVoorGoed": clean(col(row, "Benodigd voor 'Goed'")),
                 "vraagId": clean(col(row, "Monitoringsvraag_ID")),
                 "_vraagTitle": clean(col(row, "Monitoringsvraag")),
                 "domain": dom,
-                "domainV09": None,
                 "domain2": domain_code(col(row, "DMI-domein 2_optioneel")),
                 "cluster": clean(col(row, "Thematische cluster")),
                 "blauwdruk": split_codes(col(row, "Blauwdruk G40")),
@@ -211,6 +237,9 @@ def read_indicators(wb) -> list[dict]:
                 "bron": clean(col(row, "IND_Dashboard")),
                 "bronUrl": bron_url,
                 "bronLabel": bron_label,
+                "bronBeschrijving": None,
+                "bronBeschrijvingUrl": None,
+                "beheerder": None,
                 "dataverzamelaar": clean(col(row, "Verantwoordelijke dataverzamelaar")),
                 "openbaar": ja_nee(col(row, "Openbaar toegankelijk")),
                 "vrijGebruik": ja_nee(col(row, "Data vrij te gebruiken")),
@@ -227,6 +256,12 @@ def read_indicators(wb) -> list[dict]:
                 "historie": historie,
                 "historieNote": hist_raw if hist_raw and hist_raw.lower() not in ("ja", "nee") else None,
                 "prognose": clean(col(row, "Prognose")),
+                "modelMeting": None,
+                "typeData": None,
+                "dekking": None,
+                "bewerkingNodig": None,
+                "meetmethode": None,
+                "norm": None,
             }
         )
     return out
@@ -294,7 +329,7 @@ def read_v83c(wb) -> dict[str, dict]:
     return out
 
 
-def read_meta(wb, excel_path: Path, pdf_path: Path) -> dict:
+def read_meta(wb, excel_path: Path, pdf_path: Path, latest: dict) -> dict:
     ws = wb["Introductie"]
 
     def v(ref):
@@ -327,10 +362,26 @@ def read_meta(wb, excel_path: Path, pdf_path: Path) -> dict:
 
     m = re.search(r"(\d{1,2})-(\d{1,2})-(\d{4}).*?v(\d+\.\d+)", pdf_path.name)
     pdf_date = f"{m.group(3)}-{int(m.group(2)):02d}-{int(m.group(1)):02d}" if m else ""
+    excel_version = clean(v("C3")) or ""
+    excel_date_iso = excel_date.date().isoformat() if isinstance(excel_date, dt.datetime) else ""
+    pdf_version = m.group(4) if m else ""
     return {
-        "excelVersion": clean(v("C3")) or "",
-        "excelDate": excel_date.date().isoformat() if isinstance(excel_date, dt.datetime) else "",
-        "pdfVersion": m.group(4) if m else "",
+        "version": latest["version"],
+        "versionDate": latest["date"],
+        "sources": [
+            {"version": excel_version, "date": excel_date_iso, "format": "xlsx",
+             "title": "DMI Indicatorenregister – werkbaar concept",
+             "role": "Basis: alle beoordeelde indicatoren, Blauwdruk G40-vertaling, monitoringsvragen en proces."},
+            {"version": pdf_version, "date": pdf_date, "format": "pdf",
+             "title": "DMI indicatorenregister concept (printout)",
+             "role": "Selectie Goed en Gewenst, geschiktheid en domeinindeling."},
+            {"version": latest["version"], "date": latest["date"], "format": "xlsx",
+             "title": "Uitdraai indicatoren met beoordeling ‘Goed’",
+             "role": "Actuele Goed-selectie met volledige metadata, registercodes, meetmethode en normen."},
+        ],
+        "excelVersion": excel_version,
+        "excelDate": excel_date_iso,
+        "pdfVersion": pdf_version,
         "pdfDate": pdf_date,
         "intro": clean(v("K2")) or "",
         "geschiktheidDefinitions": defs,
@@ -412,7 +463,7 @@ def read_pdf(pdf_path: Path) -> list[dict]:
     return out
 
 
-def overlay_pdf(indicators: list[dict], pdf_rows: list[dict]) -> dict:
+def overlay_pdf(indicators: list[dict], pdf_rows: list[dict], version: str) -> dict:
     """Match every v0.91 row to one Excel record and overlay its assessment.
 
     v0.91 re-assigned several indicators to another DMI-domein ("DMI domein
@@ -446,16 +497,206 @@ def overlay_pdf(indicators: list[dict], pdf_rows: list[dict]) -> dict:
         best["inRegister"] = True
         if best["geschiktheid"] != row["geschiktheid"]:
             changed.append((best["id"], best["name"], best["geschiktheid"], row["geschiktheid"]))
-            best["geschiktheidV09"] = best["geschiktheid"]
+            change(best, version, "geschiktheid", best["geschiktheid"], row["geschiktheid"])
             best["geschiktheid"] = row["geschiktheid"]
         if best["domain"] != row["domain"]:
             moved.append((best["id"], best["name"], best["domain"], row["domain"]))
-            best["domainV09"] = best["domain"]
+            change(best, version, "domain", best["domain"], row["domain"])
             best["domain"] = row["domain"]
 
     # Goed/Gewenst in v0.9 but absent from v0.91 → keep v0.9 assessment, flag.
     dropped = [i for i in indicators if i["geschiktheid"] in ("goed", "gewenst") and not i["inRegister"]]
     return {"unmatched": unmatched, "changed": changed, "dropped": dropped, "moved": moved}
+
+
+# --------------------------------------------------------------------------- v0.94 overlay
+
+
+def capitalise(text: str | None) -> str | None:
+    return text[0].upper() + text[1:] if text else text
+
+
+def read_latest(path: Path) -> dict:
+    """Read the 'Uitdraai' printout: one sheet, title block, header row with IDs."""
+    import warnings as pywarnings
+
+    pywarnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
+    wb = openpyxl.load_workbook(path, data_only=True)
+    ws = wb.worksheets[0]
+    rows = list(ws.iter_rows(max_col=60))
+    header_row = next(i for i, r in enumerate(rows) if any(c.value == "Indicator_ID" for c in r))
+    names = [clean(c.value) for c in rows[header_row]]
+    header: dict[str, int] = {}
+    for i, n in enumerate(names):
+        if n and n not in header:  # Monitoringsvraag_ID appears twice; take the first
+            header[n] = i
+
+    title = " ".join(clean(c.value) or "" for r in rows[:header_row] for c in r if isinstance(c.value, str))
+    m = re.search(r"[Vv]ersie\s+(\d+\.\d+)\s*-\s*(\d{1,2})-(\d{1,2})-(\d{4})", title)
+    version = m.group(1) if m else (re.search(r"(\d+\.\d+)", path.name) or [None, ""])[1]
+    date = f"{m.group(4)}-{int(m.group(3)):02d}-{int(m.group(2)):02d}" if m else ""
+    stated = {}
+    for r in rows[:header_row]:
+        label = next((clean(c.value) for c in r if isinstance(c.value, str)), None)
+        number = next((c.value for c in r if isinstance(c.value, (int, float))), None)
+        if label and number is not None:
+            stated[label] = int(number)
+
+    def cell(row, name):
+        return row[header[name]] if name in header else None
+
+    def val(row, name):
+        c = cell(row, name)
+        return clean(c.value) if c is not None else None
+
+    out = []
+    for row in rows[header_row + 1 :]:
+        ind_id = val(row, "Indicator_ID")
+        name = val(row, "Indicator")
+        if not ind_id or not name:
+            continue
+        bron_url, bron_label = link_cell(cell(row, "Brondata"))
+        besch_url, besch_label = link_cell(cell(row, "Bron beschrijving"))
+        norm = None
+        if (val(row, "Norm (Ja/Nee)") or "").lower().startswith("ja"):
+            norm = {
+                "waarde": val(row, "Normwaarde"),
+                "jaar": year(cell(row, "Norm jaar").value),
+                "bron": val(row, "Norm bron"),
+            }
+        hist = (val(row, "Historie") or "").lower()
+        bewerking = ja_nee(cell(row, "Heeft bewerking nodig").value)
+        eenheid = val(row, "Eenheid")
+        out.append(
+            {
+                "id": ind_id,
+                "name": name,
+                "vraagId": val(row, "Monitoringsvraag_ID"),
+                "vraagTitle": val(row, "Monitoringsvraag"),
+                "indeling": val(row, "Volgorde register"),
+                "bron": val(row, "Dashboard"),
+                "type": indicator_type(cell(row, "Indicator type").value),
+                "bronUrl": bron_url,
+                "bronLabel": bron_label,
+                "modelMeting": (val(row, "Model / Meting") or "").lower() or None,
+                "openbaar": ja_nee(cell(row, "Openbaar toegankelijk").value),
+                "vrijGebruik": ja_nee(cell(row, "Data vrij te gebruiken").value),
+                "voorwaarden": None
+                if (val(row, "Onder welke voorwaarden") or "").lower() in ("", "nvt", "n.v.t.")
+                else capitalise(val(row, "Onder welke voorwaarden")),
+                "beheerder": val(row, "Indicator beheerder"),
+                "frequentie": val(row, "Frequentie"),
+                "meestRecentJaar": year(cell(row, "Meest recent jaar").value),
+                "typeData": val(row, "Type data"),
+                "laagsteSchaal": val(row, "Laagste schaalniveau"),
+                "dekking": val(row, "Dekking"),
+                "historie": True if hist.startswith("ja") else False if hist.startswith("nee") else None,
+                "bewerkingNodig": {"ja": True, "nee": False}.get(bewerking or ""),
+                "domain": domain_code(cell(row, "DMI-domein").value),
+                "domain2": domain_code(cell(row, "DMI-domein 2_optioneel").value),
+                "cluster": val(row, "Thematische cluster"),
+                "blauwdruk": split_codes(cell(row, "Blauwdruk G40").value),
+                "bronBeschrijving": besch_label,
+                "bronBeschrijvingUrl": besch_url,
+                "dataverzamelaar": val(row, "Dataverzamelaar"),
+                "prognose": capitalise(val(row, "Prognose")),
+                "eenheid": None if (eenheid or "").lower() in ("nvt", "n.v.t.") else eenheid,
+                "meetmethode": val(row, "Meetmethode"),
+                "norm": norm,
+            }
+        )
+    return {"version": version, "date": date, "stated": stated, "rows": out, "file": path.name}
+
+
+# Fields the printout overrides when it has a value (empty cells keep the older value).
+LATEST_FIELDS = [
+    "indeling", "bron", "type", "bronUrl", "bronLabel", "modelMeting", "openbaar", "vrijGebruik",
+    "voorwaarden", "beheerder", "frequentie", "meestRecentJaar", "typeData", "laagsteSchaal",
+    "dekking", "historie", "bewerkingNodig", "domain2", "cluster", "blauwdruk", "bronBeschrijving",
+    "bronBeschrijvingUrl", "dataverzamelaar", "prognose", "eenheid", "meetmethode", "norm",
+]
+
+
+def overlay_latest(indicators: list[dict], latest: dict) -> dict:
+    """Overlay the v0.94 'Goed' printout onto the records.
+
+    Matching: same Indicator_ID, best name match among those (IDs are not
+    unique). A record with the same ID but a different name counts as a
+    rename only when no other record with that ID fits better.
+    """
+    version = latest["version"]
+    by_id = collections.defaultdict(list)
+    for ind in indicators:
+        by_id[ind["id"]].append(ind)
+    used: set[str] = set()
+    report = collections.defaultdict(list)
+
+    def ratio(a, b):
+        return difflib.SequenceMatcher(None, norm(a), norm(b)).ratio()
+
+    for row in latest["rows"]:
+        if not row["domain"]:
+            warn(f"v{version} {row['id']}: unknown domain — skipped")
+            continue
+        candidates = [i for i in by_id.get(row["id"], []) if i["slug"] not in used]
+        # Ties (duplicate IDs with the same name) go to the record already in the register.
+        best = max(
+            candidates,
+            key=lambda i: (round(ratio(i["name"], row["name"]), 3), i["inRegister"], i["geschiktheid"] == "goed"),
+            default=None,
+        )
+        if best is None:
+            # Not in v0.9 under this ID: a new indicator.
+            n = sum(1 for i in indicators if i["id"] == row["id"])
+            slug = slugify(row["id"]) + ("" if n == 0 else chr(ord("a") + n))
+            best = {
+                "slug": slug, "id": row["id"], "name": row["name"], "geschiktheid": "goed",
+                "inRegister": False, "changes": [], "toelichting": None, "benodigdVoorGoed": None,
+                "vraagId": row["vraagId"], "_vraagTitle": row["vraagTitle"], "domain": row["domain"],
+                "schaalniveau": None, "historieNote": None,
+                **{f: None for f in LATEST_FIELDS},
+            }
+            best["blauwdruk"] = []
+            change(best, version, "added", None, None)
+            indicators.append(best)
+            by_id[row["id"]].append(best)
+            report["added"].append(best)
+        used.add(best["slug"])
+
+        if norm(best["name"]) != norm(row["name"]) and best["changes"][-1:] != [
+            {"version": version, "field": "added", "from": None, "to": None}
+        ]:
+            change(best, version, "name", best["name"], row["name"])
+            report["renamed"].append((best["id"], best["name"], row["name"]))
+            best["name"] = row["name"]
+        if best["geschiktheid"] != "goed":
+            change(best, version, "geschiktheid", best["geschiktheid"], "goed")
+            report["changed"].append((best["id"], best["name"], best["geschiktheid"]))
+            best["geschiktheid"] = "goed"
+        if best["domain"] != row["domain"]:
+            change(best, version, "domain", best["domain"], row["domain"])
+            report["moved"].append((best["id"], best["name"], best["domain"], row["domain"]))
+            best["domain"] = row["domain"]
+        if row["vraagId"] and best["vraagId"] != row["vraagId"]:
+            warn(f"{best['id']}: monitoringsvraag {best['vraagId']} → {row['vraagId']} in v{version}")
+            best["vraagId"] = row["vraagId"]
+        if row["vraagTitle"]:
+            best["_vraagTitleLatest"] = row["vraagTitle"]
+        for f in LATEST_FIELDS:
+            if row[f] not in (None, [], ""):
+                best[f] = row[f]
+        if row["historie"] is not None:
+            best["historieNote"] = None
+        best["inRegister"] = True
+
+    # Goed in the register before, but missing from the newest Goed printout.
+    for ind in indicators:
+        if ind["slug"] in used or not ind["inRegister"] or ind["geschiktheid"] != "goed":
+            continue
+        ind["inRegister"] = False
+        change(ind, version, "register", "opgenomen", "niet opgenomen")
+        report["removed"].append(ind)
+    return report
 
 
 # --------------------------------------------------------------------------- assemble
@@ -478,7 +719,9 @@ def build_questions(indicators, matrix, v83c) -> list[dict]:
             {
                 "id": vid,
                 "slug": slugify(vid),
-                "title": items[0]["_vraagTitle"] or vid,
+                "title": next((i["_vraagTitleLatest"] for i in items if i.get("_vraagTitleLatest")), None)
+                or items[0]["_vraagTitle"]
+                or vid,
                 "kernvraag": (v83c.get(vid) or {}).get("kern") or (matrix.get(vid) or {}).get("kern"),
                 "variaties": (v83c.get(vid) or {}).get("variaties"),
                 "domains": domains,
@@ -498,9 +741,10 @@ def ts(value) -> str:
 
 
 def main() -> None:
-    excel_path = find_source("*Indicatorenregister*.xlsx")
+    excel_path = find_source("*indicatorenregister*werkbaar concept*.xlsx")
     pdf_path = find_source("*indicatorenregister*.pdf")
-    print(f"Excel: {excel_path.name}\nPDF:   {pdf_path.name}")
+    latest_path = find_source("*uitdraai*indicatorenregister*.xlsx")
+    print(f"Excel:  {excel_path.name}\nPDF:    {pdf_path.name}\nLatest: {latest_path.name}")
 
     import warnings as pywarnings
 
@@ -511,12 +755,15 @@ def main() -> None:
     actions = read_actions(wb)
     matrix = read_matrix(wb)
     v83c = read_v83c(wb)
-    meta = read_meta(wb, excel_path, pdf_path)
+    latest = read_latest(latest_path)
+    meta = read_meta(wb, excel_path, pdf_path, latest)
 
     before = collections.Counter(i["geschiktheid"] for i in indicators)
     pdf_rows = read_pdf(pdf_path)
-    report = overlay_pdf(indicators, pdf_rows)
+    report = overlay_pdf(indicators, pdf_rows, meta["pdfVersion"])
     after = collections.Counter(i["geschiktheid"] for i in indicators)
+    report_latest = overlay_latest(indicators, latest)
+    after_latest = collections.Counter(i["geschiktheid"] for i in indicators)
 
     questions = build_questions(indicators, matrix, v83c)
     action_ids = {a["id"] for a in actions}
@@ -529,6 +776,7 @@ def main() -> None:
 
     for ind in indicators:
         ind.pop("_vraagTitle", None)
+        ind.pop("_vraagTitleLatest", None)
         if not ind["bronUrl"] and ind["geschiktheid"] in ("goed", "gewenst"):
             warn(f"{ind['id']}: no source link ({ind['name']})")
 
@@ -541,6 +789,7 @@ def main() -> None:
 // Generated by scripts/extract-register.py on {generated} from
 //   {excel_path.name}
 //   {pdf_path.name}
+//   {latest_path.name}
 // Re-run `npm run extract` after any revision of these sources.
 //
 // Labels, colours and display taxonomy live in ../taxonomy.ts and are
@@ -581,6 +830,23 @@ export const actions: BlueprintAction[] = {ts(actions)};
         print(f"    {cid}: {old} → {new}  ({name})")
     for i in report["dropped"]:
         print(f"  not in v0.91 {i['id']} ({i['geschiktheid']}): {i['name']}")
+    v = latest["version"]
+    reg_goed = [i for i in indicators if i["inRegister"] and i["geschiktheid"] == "goed"]
+    print(f"\nv{v} ({latest['date']}): {len(latest['rows'])} Goed rows")
+    print("  after v" + v + ":    " + ", ".join(f"{g} {after_latest[g]}" for g in GESCHIKTHEID))
+    print(f"  stated in printout: {latest['stated']}")
+    print(f"  Goed in register: {len(reg_goed)} rows, {len({i['indeling'] for i in reg_goed})} register codes, "
+          f"{len({i['vraagId'] for i in reg_goed})} monitoringsvragen")
+    for cid, name, old in report_latest["changed"]:
+        print(f"  changed  {cid}: {old} → goed  ({name})")
+    for cid, old, new in report_latest["renamed"]:
+        print(f"  renamed  {cid}: {old!r} → {new!r}")
+    print(f"  domain re-assigned in v{v}: {len(report_latest['moved'])}")
+    for i in report_latest["added"]:
+        print(f"  added    {i['id']} ({i['vraagId']}): {i['name']}")
+    for i in report_latest["removed"]:
+        print(f"  no longer in Goed selection {i['id']} ({i['indeling']}): {i['name']}")
+    print(f"Register (Goed v{v} + Gewenst v{meta['pdfVersion']}): {sum(i['inRegister'] for i in indicators)}")
     print(f"Monitoringsvragen: {len(questions)} (in register: {sum(q['inRegister'] for q in questions)})")
     print(f"Blauwdruk acties: {len(actions)} (with vragen: {sum(1 for a in actions if a['vraagIds'])})")
     print(f"Timeline events: {len(meta['timeline'])}")
