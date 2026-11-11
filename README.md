@@ -54,4 +54,8 @@ met de labels `feedback` plus `inhoud`, `enhancement`, `question` of `bug`.
 Zet ze in Vercel (Production en Preview) en lokaal in `.env.local`. Zonder token toont de knop een
 melding met het e-mailadres van het DMI-team. Bescherming tegen misbruik: same-origin-check, honeypot,
 lengtegrenzen, max. 5 berichten per IP per 10 minuten (per serverinstantie), en `@mentions` worden onschadelijk gemaakt.
-De repository is openbaar: het formulier vraagt bezoekers geen persoonsgegevens in te vullen.
+De repository is openbaar: het formulier vraagt bezoekers geen persoonsgegevens in hun bericht te zetten.
+
+Contact is optioneel. Wie *Neem contact met me op* aanvinkt, krijgt eerst de vraag of die zeker is (de gegevens
+worden openbaar; anoniem blijven kan ook). Pas na bevestiging verschijnen naam, organisatie (beide optioneel) en
+e-mailadres. Die komen in de openbare issue, met het label `contact gewenst`. Teksten staan in `src/data/content/feedback.ts`.

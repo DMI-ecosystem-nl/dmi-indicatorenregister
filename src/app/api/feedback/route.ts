@@ -1,9 +1,11 @@
+import { feedbackCopy } from "@/data/content/feedback";
 import {
-  FEEDBACK_FALLBACK_EMAIL,
+  FEEDBACK_CONTACT_MAX,
   FEEDBACK_MESSAGE_MAX,
   FEEDBACK_MESSAGE_MIN,
   type FeedbackResponse,
   feedbackCategory,
+  isValidEmail,
 } from "@/lib/feedback";
 import { meta } from "@/lib/selectors";
 
@@ -15,6 +17,8 @@ import { meta } from "@/lib/selectors";
  * - GITHUB_FEEDBACK_REPO   optional, "owner/name"; defaults to the canonical repo.
  */
 const DEFAULT_REPO = "DMI-ecosystem-nl/dmi-indicatorenregister";
+
+const E = feedbackCopy.errors;
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
@@ -44,6 +48,25 @@ function defuseMentions(text: string) {
   return text.replace(/@(?=[A-Za-z0-9_-])/g, "@​");
 }
 
+/** One line of plain text: no line breaks, markdown syntax escaped, mentions defused. */
+function plainLine(value: unknown) {
+  if (typeof value !== "string") return "";
+  const line = value.replace(/\s+/g, " ").trim().slice(0, FEEDBACK_CONTACT_MAX);
+  return defuseMentions(line.replace(/[\\`*_{}[\]()<>#|!~]/g, "\\$&"));
+}
+
+type Contact = { email: string; name: string; organisation: string };
+
+/** `undefined`: no contact wanted. `null`: contact wanted but the email is invalid. */
+function parseContact(value: unknown): Contact | null | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const c = value as Record<string, unknown>;
+  if (c.consent !== true) return undefined;
+  const email = typeof c.email === "string" ? c.email.trim() : "";
+  if (!isValidEmail(email)) return null;
+  return { email, name: plainLine(c.name), organisation: plainLine(c.organisation) };
+}
+
 function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin) return false;
@@ -56,18 +79,18 @@ function sameOrigin(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!sameOrigin(request)) return fail("Verzoek geweigerd.", 403);
+  if (!sameOrigin(request)) return fail(E.forbidden, 403);
 
   const token = process.env.GITHUB_FEEDBACK_TOKEN;
   if (!token) {
-    return fail(`Feedback versturen is nu niet mogelijk. Mail het DMI-team via ${FEEDBACK_FALLBACK_EMAIL}.`, 503);
+    return fail(E.unavailable, 503);
   }
 
   let input: Record<string, unknown>;
   try {
     input = await request.json();
   } catch {
-    return fail("Het verzoek is ongeldig.", 400);
+    return fail(E.invalid, 400);
   }
 
   // Honeypot filled in: pretend it worked, create nothing.
@@ -75,14 +98,16 @@ export async function POST(request: Request) {
 
   const category = feedbackCategory(input.category);
   const message = typeof input.message === "string" ? input.message.trim() : "";
-  if (!category) return fail("Kies een soort feedback.", 400);
+  if (!category) return fail(E.category, 400);
   if (message.length < FEEDBACK_MESSAGE_MIN || message.length > FEEDBACK_MESSAGE_MAX) {
-    return fail(`Schrijf een bericht van ${FEEDBACK_MESSAGE_MIN} tot ${FEEDBACK_MESSAGE_MAX} tekens.`, 400);
+    return fail(E.length(FEEDBACK_MESSAGE_MIN, FEEDBACK_MESSAGE_MAX), 400);
   }
+  const contact = parseContact(input.contact);
+  if (contact === null) return fail(E.email, 400);
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (rateLimited(ip)) {
-    return fail("Je hebt veel berichten kort na elkaar verstuurd. Probeer het over 10 minuten opnieuw.", 429);
+    return fail(E.rateLimit, 429);
   }
 
   // Only accept a path on this site; anything else is dropped.
@@ -101,10 +126,10 @@ export async function POST(request: Request) {
   const safeMessage = defuseMentions(message);
   const firstLine = safeMessage.split("\n")[0].trim();
   const summary = firstLine.length > 70 ? `${firstLine.slice(0, 69).trimEnd()}…` : firstLine;
-  const title = `${category.label}: ${summary}`;
+  const title = `${feedbackCopy.categories[category.value]}: ${summary}`;
 
   const body = [
-    `**Soort:** ${category.label}`,
+    `**Soort:** ${feedbackCopy.categories[category.value]}`,
     `**Pagina:** ${pageUrl ? `[${pagePath}](${pageUrl.href})` : "onbekend"}`,
     `**Registerversie:** v${meta.version}`,
     "",
@@ -113,11 +138,25 @@ export async function POST(request: Request) {
     safeMessage,
     "",
     "---",
+    ...(contact
+      ? [
+          "",
+          "**Contact gewenst**",
+          "",
+          `- Naam: ${contact.name || "niet ingevuld"}`,
+          `- Organisatie: ${contact.organisation || "niet ingevuld"}`,
+          // Backticks: no mention, no autolink, easy to copy. isValidEmail() excludes backticks.
+          `- E-mail: \`${contact.email}\``,
+          "",
+          "<sub>De indiener heeft toestemming gegeven om deze contactgegevens openbaar in deze melding te tonen.</sub>",
+          "",
+        ]
+      : []),
     "<sub>Ingediend via de feedbackknop op de website.</sub>",
   ].join("\n");
 
   const repo = process.env.GITHUB_FEEDBACK_REPO || DEFAULT_REPO;
-  const labels = ["feedback", category.githubLabel];
+  const labels = ["feedback", category.githubLabel, ...(contact ? ["contact gewenst"] : [])];
 
   const create = (withLabels: boolean) =>
     fetch(`https://api.github.com/repos/${repo}/issues`, {
@@ -139,18 +178,12 @@ export async function POST(request: Request) {
     if (res.status === 422) res = await create(false);
     if (!res.ok) {
       console.error("[feedback] GitHub API", res.status, await res.text().catch(() => ""));
-      return fail(
-        `GitHub heeft de melding niet aangenomen. Probeer het later opnieuw of mail het DMI-team via ${FEEDBACK_FALLBACK_EMAIL}.`,
-        502,
-      );
+      return fail(E.rejected, 502);
     }
     const issue = (await res.json()) as { number: number; html_url: string };
     return json({ ok: true, number: issue.number, url: issue.html_url }, 201);
   } catch (err) {
     console.error("[feedback] GitHub request failed", err);
-    return fail(
-      `We konden GitHub niet bereiken. Probeer het later opnieuw of mail het DMI-team via ${FEEDBACK_FALLBACK_EMAIL}.`,
-      502,
-    );
+    return fail(E.unreachable, 502);
   }
 }
