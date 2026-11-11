@@ -15,9 +15,9 @@ export default function VragenPage() {
         title="Wat willen we weten?"
         description={
           <>
-            De acties uit de Blauwdruk G40 zijn vertaald naar {totals.questions} monitoringsvragen. Voor{" "}
-            {totals.questionsInRegister} daarvan is minstens één geschikte indicator gevonden. Vragen vanaf V.700
-            komen uit het aanvullende wensenlijstje.
+            De acties uit de Blauwdruk G40 zijn vertaald naar monitoringsvragen. Hier staan de{" "}
+            {totals.questions} vragen met minstens één indicator in het register. Vragen vanaf V.700 komen uit het
+            aanvullende wensenlijstje.
           </>
         }
       >

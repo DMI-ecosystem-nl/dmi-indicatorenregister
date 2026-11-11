@@ -13,8 +13,8 @@ const STEPS = [
   { title: "Blauwdruk G40", text: "Beleidsacties uit de Blauwdruk G40 voor slimme duurzame verstedelijking en mobiliteitsvernieuwing." },
   { title: "Vertaling (fase I)", text: "Per actie: welke doelen (I), hoe adresseren we die (II) en welke data zijn nodig (III)?" },
   { title: "Monitoringsvragen", text: `${totals.questions} monitoringsvragen, verdeeld over de DMI-domeinen.` },
-  { title: "Beoordeling", text: `${totals.indicators} bestaande indicatoren beoordeeld, met expertsessies per domein.` },
-  { title: "Register", text: `${totals.register} indicatoren Goed of Gewenst in v${meta.version}. De community toetst deze selectie voor versie 1.0.` },
+  { title: "Beoordeling", text: `${meta.assessedCount} bestaande indicatoren beoordeeld, met expertsessies per domein.` },
+  { title: "Register", text: `${totals.indicators} indicatoren Geschikt of Gewenst in v${meta.version}. De community toetst deze selectie voor versie 1.0.` },
 ];
 
 const CRITERIA = [
@@ -50,14 +50,13 @@ function StatusCell({ value }: { value: string | null }) {
 export default function MethodiekPage() {
   const typeCounts = indicatorTypes.map((t) => ({
     ...t,
-    all: indicators.filter((i) => i.type === t.value).length,
-    reg: indicators.filter((i) => i.type === t.value && i.inRegister).length,
+    count: indicators.filter((i) => i.type === t.value).length,
   }));
-  const maxType = Math.max(...typeCounts.map((t) => t.all));
+  const maxType = Math.max(...typeCounts.map((t) => t.count));
   const timeline = [
     ...meta.timeline.map((t) => ({ ...t, future: false })),
     { date: meta.pdfDate, title: `Concept v${meta.pdfVersion} (register-printout)`, future: false },
-    { date: meta.versionDate, title: `Concept v${meta.version} (uitdraai indicatoren ‘Goed’)`, future: false },
+    { date: meta.versionDate, title: `Concept v${meta.version} (uitdraai geschikte indicatoren)`, future: false },
     { date: "2026-12-02", title: "Oplevering versie 1.0 indicatorenregister en dashboard", future: true },
   ].sort((a, b) => a.date.localeCompare(b.date));
 
@@ -97,13 +96,16 @@ export default function MethodiekPage() {
             </ul>
           </div>
           <div>
-            <h2 className="mb-4 font-heading text-xl font-semibold text-dmi-navy">Geschiktheid</h2>
+            <h2 className="mb-1 font-heading text-xl font-semibold text-dmi-navy">Geschiktheid</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Elke indicator kreeg een van deze vier beoordelingen. Het register bevat de indicatoren met ‘Geschikt’
+              en ‘Gewenst’. In de bronbestanden heet ‘Geschikt’ nog ‘Goed’.
+            </p>
             <dl className="space-y-3">
               {geschiktheidOrder.map((g) => (
                 <div key={g} className="flex gap-3 rounded-lg border border-border bg-white p-3">
                   <dt className="w-24 shrink-0">
                     <GeschiktheidBadge value={g} size="md" />
-                    <span className="mt-1 block text-xs text-muted-foreground tabular-nums">{totals.allCounts[g]} indicatoren</span>
                   </dt>
                   <dd className="text-sm">{meta.geschiktheidDefinitions[g]}</dd>
                 </div>
@@ -115,7 +117,7 @@ export default function MethodiekPage() {
         <section>
           <h2 className="mb-1 font-heading text-xl font-semibold text-dmi-navy">Indicatortypen: van context tot impact</h2>
           <p className="mb-5 text-sm text-muted-foreground">
-            Elke indicator heeft een type in de keten van context naar impact. Balk: aantal beoordeelde indicatoren per type. Donker deel: opgenomen in het register.
+            Elke indicator heeft een type in de keten van context naar impact. Balk: aantal indicatoren in het register per type.
           </p>
           <div className="overflow-x-auto">
             <ol className="flex min-w-[760px] items-stretch gap-1.5">
@@ -126,11 +128,10 @@ export default function MethodiekPage() {
                     <span className="mt-1 text-[11px] leading-snug text-muted-foreground">{t.description}</span>
                     <div className="mt-auto pt-3">
                       <div className="relative h-16 rounded bg-dmi-blue-050">
-                        <div className="absolute inset-x-2 bottom-0 rounded-t-[4px] bg-dmi-blue-200" style={{ height: `${(t.all / maxType) * 100}%` }} />
-                        <div className="absolute inset-x-2 bottom-0 rounded-t-[4px] bg-dmi-navy" style={{ height: `${(t.reg / maxType) * 100}%` }} />
+                        <div className="absolute inset-x-2 bottom-0 rounded-t-[4px] bg-dmi-navy" style={{ height: `${(t.count / maxType) * 100}%` }} />
                       </div>
                       <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
-                        <strong className="text-dmi-navy">{t.reg}</strong> / {t.all}
+                        <strong className="text-dmi-navy">{t.count}</strong>
                       </p>
                     </div>
                 </Reveal>

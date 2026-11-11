@@ -19,14 +19,11 @@ export default function MatrixPage() {
         domain: q.domains[0],
         best: bestGeschiktheid(items),
         codes: q.blauwdruk,
-        register: items.filter((i) => i.inRegister).length,
-        total: items.length,
         indicators: items.map((i) => ({
           slug: i.slug,
           code: i.indeling ?? i.id,
           name: i.name,
           geschiktheid: i.geschiktheid,
-          inRegister: i.inRegister,
         })),
       };
     })
@@ -51,7 +48,7 @@ export default function MatrixPage() {
           <>
             Elke kolom is een actie uit de Blauwdruk G40, elke rij een monitoringsvraag. Een gekleurde cel betekent
             dat de vraag uit die actie komt. De kleur toont de beste beschikbare indicator.{" "}
-            {gaps.length} van de {cols.length} acties hebben nog geen indicator met ‘Goed’.
+            {gaps.length} van de {cols.length} acties hebben nog geen geschikte indicator.
           </>
         }
       />

@@ -10,7 +10,7 @@ export type NavIcon =
   | "boxes"
   | "info";
 
-export type NavCount = "domains" | "actions" | "questions" | "register";
+export type NavCount = "domains" | "actions" | "questions" | "indicators";
 
 export interface NavItem {
   href: string;
@@ -31,7 +31,7 @@ export const navGroups: { label: string | null; items: NavItem[] }[] = [
   },
   {
     label: "Catalogus",
-    items: [{ href: "/indicatoren", label: "Indicatoren", icon: "bar-chart", count: "register" }],
+    items: [{ href: "/indicatoren", label: "Indicatoren", icon: "bar-chart", count: "indicators" }],
   },
   {
     label: "Analyse",

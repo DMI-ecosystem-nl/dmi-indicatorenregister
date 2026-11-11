@@ -2,13 +2,14 @@
 // Every page and view goes through these helpers so counts never disagree.
 
 import { actions, indicators, meta, questions } from "@/data/generated/register";
-import { domainOrder, geschiktheidOrder, type Schaal } from "@/data/taxonomy";
+import { domainOrder, registerGeschiktheid, type Schaal } from "@/data/taxonomy";
 import type {
   BlueprintAction,
   DomainCode,
   Geschiktheid,
   Indicator,
   MonitoringQuestion,
+  RegisterGeschiktheid,
 } from "@/data/types";
 
 export { actions, indicators, meta, questions };
@@ -24,8 +25,6 @@ export const getQuestion = (id: string) => questionById.get(id);
 export const getQuestionBySlug = (slug: string) => questionBySlug.get(slug);
 export const getAction = (id: string) => actionById.get(id);
 export const getActionBySlug = (slug: string) => actionBySlug.get(slug);
-
-export const registerIndicators = indicators.filter((i) => i.inRegister);
 
 export function indicatorsOf(question: MonitoringQuestion): Indicator[] {
   return question.indicatorSlugs
@@ -50,16 +49,21 @@ export function questionsOfDomain(code: DomainCode): MonitoringQuestion[] {
   );
 }
 
-export function countByGeschiktheid(items: Indicator[]): Record<Geschiktheid, number> {
-  const counts = { goed: 0, gewenst: 0, beperkt: 0, niet: 0 };
+export function countByGeschiktheid(items: Indicator[]): Record<RegisterGeschiktheid, number> {
+  const counts = { goed: 0, gewenst: 0 };
   for (const i of items) counts[i.geschiktheid] += 1;
   return counts;
 }
 
 /** Best (most suitable) assessment among a set of indicators. */
-export function bestGeschiktheid(items: Indicator[]): Geschiktheid | null {
-  for (const g of geschiktheidOrder) if (items.some((i) => i.geschiktheid === g)) return g;
+export function bestGeschiktheid(items: Indicator[]): RegisterGeschiktheid | null {
+  for (const g of registerGeschiktheid) if (items.some((i) => i.geschiktheid === g)) return g;
   return null;
+}
+
+/** Indicators linked to an action through its monitoringsvragen. */
+export function indicatorsOfAction(action: BlueprintAction): Indicator[] {
+  return questionsOfAction(action).flatMap(indicatorsOf);
 }
 
 export function domainStats() {
@@ -68,7 +72,6 @@ export function domainStats() {
     return {
       code,
       total: items.length,
-      register: items.filter((i) => i.inRegister).length,
       counts: countByGeschiktheid(items),
       questions: new Set(items.map((i) => i.vraagId)).size,
     };
@@ -108,12 +111,11 @@ export function hostOf(url: string | null): string | null {
 
 export const totals = {
   indicators: indicators.length,
-  register: registerIndicators.length,
-  registerCounts: countByGeschiktheid(registerIndicators),
-  allCounts: countByGeschiktheid(indicators),
+  counts: countByGeschiktheid(indicators),
   questions: questions.length,
-  questionsInRegister: questions.filter((q) => q.inRegister).length,
   actions: actions.length,
+  /** Blauwdruk actions with at least one indicator in the register. */
+  actionsCovered: actions.filter((a) => a.vraagIds.length > 0).length,
   domains: domainOrder.length,
   bronnen: new Set(indicators.map((i) => i.bron).filter(Boolean)).size,
 };

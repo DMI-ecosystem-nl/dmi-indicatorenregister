@@ -3,12 +3,12 @@ import { PageSkeleton } from "@/components/page-skeleton";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CoverageBar, CoverageLegend } from "@/components/coverage-bar";
 import { DomainBadge } from "@/components/domain-badge";
 import { LineList } from "@/components/field";
 import { IndicatorCard } from "@/components/indicator-card";
 import { Container, PageHeader } from "@/components/page-header";
-import { actielijnen, geschiktheidLabels, geschiktheidOrder, geschiktheidColors } from "@/data/taxonomy";
+import { CoverageBar, CoverageLegend } from "@/components/coverage-bar";
+import { actielijnen, geschiktheidColors, geschiktheidLabels, registerGeschiktheid } from "@/data/taxonomy";
 import { actionsOf, getQuestionBySlug, indicatorsOf, meta, questions } from "@/lib/selectors";
 
 export function generateStaticParams() {
@@ -56,7 +56,7 @@ async function VraagPageContent({ params }: { params: PageProps<"/vragen/[slug]"
             <CoverageBar counts={q.counts} height={10} />
             <CoverageLegend counts={q.counts} />
           </div>
-          {geschiktheidOrder.map((g) => {
+          {registerGeschiktheid.map((g) => {
             const group = items.filter((i) => i.geschiktheid === g);
             if (!group.length) return null;
             return (
@@ -75,8 +75,7 @@ async function VraagPageContent({ params }: { params: PageProps<"/vragen/[slug]"
             );
           })}
           <p className="text-xs text-muted-foreground">
-            Het register volgt versie v{meta.version}. ‘Beperkt’ en ‘Niet’ zijn beoordeelde kandidaten die (nog)
-            niet geschikt zijn. Open een indicator voor de toelichting.
+            Het register volgt versie v{meta.version}. Open een indicator voor de toelichting.
           </p>
         </div>
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">

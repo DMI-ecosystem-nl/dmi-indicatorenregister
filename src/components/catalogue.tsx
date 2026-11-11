@@ -27,7 +27,7 @@ export function Catalogue() {
 
       {results.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          Geen indicatoren gevonden. Pas de filters aan of kies <strong>Alle beoordeelde</strong>.
+          Geen indicatoren gevonden. Pas de zoekterm of de filters aan.
         </p>
       ) : view === "tabel" ? (
         <IndicatorTable items={results} backQuery={backQuery} />

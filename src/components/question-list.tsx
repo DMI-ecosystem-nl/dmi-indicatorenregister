@@ -6,12 +6,11 @@ import { actielijnen, actielijnOrder, domainOrder, domains } from "@/data/taxono
 import type { Actielijn, DomainCode, MonitoringQuestion } from "@/data/types";
 import { CoverageBar } from "./coverage-bar";
 import { DomainIcon } from "./domain-icon";
-import { FacetSelect, FilterRow, SearchField, Segmented, StatusBar, Toolbar, type ActiveFilter } from "./filter-controls";
+import { FacetSelect, FilterRow, SearchField, StatusBar, Toolbar, type ActiveFilter } from "./filter-controls";
 
 export function QuestionList({ questions }: { questions: MonitoringQuestion[] }) {
   const [domain, setDomain] = useState<DomainCode | null>(null);
   const [actielijn, setActielijn] = useState<Actielijn | null>(null);
-  const [scope, setScope] = useState<"alle" | "register">("alle");
   const [search, setSearch] = useState("");
 
   const results = useMemo(() => {
@@ -20,12 +19,10 @@ export function QuestionList({ questions }: { questions: MonitoringQuestion[] })
       (x) =>
         (!domain || x.domains.includes(domain)) &&
         (!actielijn || x.blauwdruk.some((c) => c.startsWith(actielijn))) &&
-        (scope === "alle" || x.inRegister) &&
         (!q || `${x.id} ${x.title} ${x.kernvraag ?? ""} ${x.variaties ?? ""}`.toLowerCase().includes(q))
     );
-  }, [questions, domain, actielijn, scope, search]);
+  }, [questions, domain, actielijn, search]);
 
-  const inRegister = questions.filter((q) => q.inRegister).length;
   const active: ActiveFilter[] = [
     ...(search.trim() ? [{ key: "q", label: `“${search.trim()}”`, onRemove: () => setSearch("") }] : []),
     ...(domain ? [{ key: "d", label: `${domain}. ${domains[domain].short}`, onRemove: () => setDomain(null) }] : []),
@@ -37,18 +34,7 @@ export function QuestionList({ questions }: { questions: MonitoringQuestion[] })
   return (
     <div className="space-y-5">
       <Toolbar>
-        <div className="flex flex-col gap-2 md:flex-row">
-          <SearchField value={search} onChange={setSearch} placeholder="Zoek een monitoringsvraag" label="Zoek monitoringsvragen" />
-          <Segmented
-            label="Reikwijdte"
-            value={scope}
-            onChange={setScope}
-            options={[
-              { value: "alle", label: <>Alle vragen <span className="tabular-nums opacity-70">{questions.length}</span></> },
-              { value: "register", label: <>Met indicator in register <span className="tabular-nums opacity-70">{inRegister}</span></> },
-            ]}
-          />
-        </div>
+        <SearchField value={search} onChange={setSearch} placeholder="Zoek een monitoringsvraag" label="Zoek monitoringsvragen" />
         <FilterRow>
           <FacetSelect<DomainCode>
             label="Domein"
@@ -77,7 +63,6 @@ export function QuestionList({ questions }: { questions: MonitoringQuestion[] })
       <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-white shadow-dmi-sm">
         {results.map((q) => {
           const total = q.indicatorSlugs.length;
-          const reg = q.counts.goed + q.counts.gewenst;
           return (
             <li key={q.id}>
               <Link href={`/vragen/${q.slug}`} className="grid gap-2 px-4 py-3 hover:bg-dmi-blue-050 sm:grid-cols-[4.5rem_1fr_9rem_10rem] sm:items-center">
@@ -101,7 +86,7 @@ export function QuestionList({ questions }: { questions: MonitoringQuestion[] })
                 <span>
                   <CoverageBar counts={q.counts} height={6} />
                   <span className="mt-1 block text-right text-[11px] text-muted-foreground tabular-nums">
-                    {reg} / {total} in register
+                    {total} {total === 1 ? "indicator" : "indicatoren"}
                   </span>
                 </span>
               </Link>

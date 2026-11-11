@@ -7,7 +7,7 @@ import { BlauwdrukChip } from "./blauwdruk-chip";
 import { CoverageBar } from "./coverage-bar";
 import { IndicatorRow } from "./indicator-row";
 
-/** A monitoring question with its indicators: register first, rejected candidates folded. */
+/** A monitoring question with its indicators. */
 export function QuestionBlock({
   question: q,
   items,
@@ -17,8 +17,6 @@ export function QuestionBlock({
   items: Indicator[];
   className?: string;
 }) {
-  const kept = items.filter((i) => i.inRegister);
-  const rest = items.filter((i) => !i.inRegister);
   return (
     <article className={cn("rounded-xl border border-border bg-white shadow-dmi-sm", className)}>
       <header className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-start">
@@ -39,29 +37,14 @@ export function QuestionBlock({
         <div className="w-full shrink-0 sm:w-40">
           <CoverageBar counts={countByGeschiktheid(items)} />
           <p className="mt-1 text-right text-[11px] text-muted-foreground tabular-nums">
-            {kept.length} in register · {items.length} beoordeeld
+            {items.length} {items.length === 1 ? "indicator" : "indicatoren"}
           </p>
         </div>
       </header>
       <div className="p-2">
-        {kept.length > 0 ? (
-          kept.map((i) => <IndicatorRow key={i.slug} indicator={i} />)
-        ) : (
-          <p className="px-3 py-2 text-sm text-muted-foreground">Nog geen geschikte indicator gevonden.</p>
-        )}
-        {rest.length > 0 && (
-          <details className="group/details mt-1 rounded-lg">
-            <summary className="cursor-pointer list-none px-3 py-1.5 text-xs text-dmi-blue hover:underline">
-              <span className="group-open/details:hidden">Toon {rest.length} niet-opgenomen kandidaten</span>
-              <span className="hidden group-open/details:inline">Verberg niet-opgenomen kandidaten</span>
-            </summary>
-            <div className="mt-1 border-t border-dashed border-border pt-1 opacity-90">
-              {rest.map((i) => (
-                <IndicatorRow key={i.slug} indicator={i} />
-              ))}
-            </div>
-          </details>
-        )}
+        {items.map((i) => (
+          <IndicatorRow key={i.slug} indicator={i} />
+        ))}
       </div>
     </article>
   );

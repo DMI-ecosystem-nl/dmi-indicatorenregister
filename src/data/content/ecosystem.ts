@@ -35,6 +35,7 @@ export const ecoNodes: Record<EcoNodeId, EcoNode> = {
     subtitle: "Beschikbare en gewenste indicatoren en metadata",
     body: [
       "Het register geeft een overzicht van bestaande, landsdekkende indicatoren. Samen beschrijven zij slimme duurzame verstedelijking en mobiliteitsvernieuwing.",
+      "Het register bevat geschikte indicatoren (‘Geschikt’). Deze kun je direct gebruiken, of na een kleine bewerking.",
       "Het register noemt ook gewenste indicatoren (‘Gewenst’). Daarvoor is een duidelijke informatiebehoefte, maar nog geen complete of landsdekkende bron. Dat is een signaal voor data-aanbieders.",
       "Het register komt op de PDX. Daar kunnen gemeenten en data-aanbieders het vinden en gebruiken.",
     ],

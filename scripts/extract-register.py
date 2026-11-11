@@ -16,15 +16,22 @@ Sources
   - "Introductie": intro text, phase status per domain and the process timeline.
 * PDF "DMI indicatorenregister v0.91 concept" — newer printout of the register
   (Goed + Gewenst only). Overlays the current geschiktheid and the "Indeling"
-  code (A01 ...) onto the Excel records.
+  code (A01 ...) onto the Excel records. Its Gewenst indicators are in the
+  register.
 * Excel "Uitdraai 0.94 DMI indicatorenregister" — newest printout of every
   indicator assessed 'Goed', with full metadata (meetmethode, norm, dekking,
-  type data, model/meting, beheerder ...). It is authoritative for the Goed
-  selection: it overrides the metadata of matched records, adds new indicators
-  and takes previously-Goed indicators that are missing from it out of the
-  register. Gewenst still follows v0.91.
+  type data, model/meting, beheerder ...). It decides the Goed part of the
+  register: it overrides the metadata of matched records and adds new
+  indicators.
 
-Every overlay records what it changed in the indicator's `changes` list.
+Only the register is exported: the v0.94 Goed rows plus the v0.91 Gewenst
+indicators. Beperkt, Niet and Goed indicators missing from v0.94 are left out,
+and so are monitoringsvragen without any register indicator. (The site labels
+'Goed' as 'Geschikt'; the data keeps the source value "goed".)
+
+The older sources still supply the assessment text, the Blauwdruk G40 links,
+the monitoringsvragen and the history: every overlay records what it changed
+in the indicator's `changes` list.
 
 Columns holding personal names or informal session notes (Kevin/Eric,
 Ingevoerd door, expert-session notes) are deliberately not exported.
@@ -68,7 +75,12 @@ def warn(msg: str) -> None:
 def find_source(pattern: str) -> Path:
     import fnmatch
 
-    matches = sorted(p for p in DOCS.iterdir() if fnmatch.fnmatch(p.name.lower(), pattern.lower()))
+    matches = sorted(
+        p
+        for p in DOCS.iterdir()
+        if not p.name.startswith("~$")  # Office lock file of a document that is open
+        and fnmatch.fnmatch(p.name.lower(), pattern.lower())
+    )
     if not matches:
         sys.exit(f"No source matching {pattern!r} in {DOCS}")
     return matches[-1]
@@ -371,13 +383,13 @@ def read_meta(wb, excel_path: Path, pdf_path: Path, latest: dict) -> dict:
         "sources": [
             {"version": excel_version, "date": excel_date_iso, "format": "xlsx",
              "title": "DMI Indicatorenregister – werkbaar concept",
-             "role": "Basis: alle beoordeelde indicatoren, Blauwdruk G40-vertaling, monitoringsvragen en proces."},
+             "role": "Basis: beoordeling, Blauwdruk G40-vertaling, monitoringsvragen en proces."},
             {"version": pdf_version, "date": pdf_date, "format": "pdf",
              "title": "DMI indicatorenregister concept (printout)",
-             "role": "Selectie Goed en Gewenst, geschiktheid en domeinindeling."},
+             "role": "Selectie Gewenst, geschiktheid en domeinindeling."},
             {"version": latest["version"], "date": latest["date"], "format": "xlsx",
              "title": "Uitdraai indicatoren met beoordeling ‘Goed’",
-             "role": "Actuele Goed-selectie met volledige metadata, registercodes, meetmethode en normen."},
+             "role": "Selectie Geschikt (‘Goed’) met metadata, registercodes, meetmethode en normen."},
         ],
         "excelVersion": excel_version,
         "excelDate": excel_date_iso,
@@ -620,6 +632,9 @@ LATEST_FIELDS = [
 def overlay_latest(indicators: list[dict], latest: dict) -> dict:
     """Overlay the v0.94 'Goed' printout onto the records.
 
+    Returns a report whose "kept" set holds the slugs of the records that are
+    in the printout, i.e. the register.
+
     Matching: same Indicator_ID, best name match among those (IDs are not
     unique). A record with the same ID but a different name counts as a
     rename only when no other record with that ID fits better.
@@ -690,12 +705,10 @@ def overlay_latest(indicators: list[dict], latest: dict) -> dict:
         best["inRegister"] = True
 
     # Goed in the register before, but missing from the newest Goed printout.
-    for ind in indicators:
-        if ind["slug"] in used or not ind["inRegister"] or ind["geschiktheid"] != "goed":
-            continue
-        ind["inRegister"] = False
-        change(ind, version, "register", "opgenomen", "niet opgenomen")
-        report["removed"].append(ind)
+    report["removed"] = [
+        i for i in indicators if i["slug"] not in used and i["inRegister"] and i["geschiktheid"] == "goed"
+    ]
+    report["kept"] = used
     return report
 
 
@@ -709,7 +722,7 @@ def build_questions(indicators, matrix, v83c) -> list[dict]:
 
     out = []
     for vid, items in groups.items():
-        counts = {g: sum(1 for i in items if i["geschiktheid"] == g) for g in GESCHIKTHEID}
+        counts = {g: sum(1 for i in items if i["geschiktheid"] == g) for g in ("goed", "gewenst")}
         domains = list(dict.fromkeys(i["domain"] for i in items))
         codes = list((matrix.get(vid) or {}).get("codes") or [])
         for i in items:
@@ -728,7 +741,6 @@ def build_questions(indicators, matrix, v83c) -> list[dict]:
                 "blauwdruk": codes,
                 "indicatorSlugs": [i["slug"] for i in items],
                 "counts": counts,
-                "inRegister": counts["goed"] + counts["gewenst"] > 0,
                 "wensenlijst": num >= 700,
             }
         )
@@ -761,9 +773,17 @@ def main() -> None:
     before = collections.Counter(i["geschiktheid"] for i in indicators)
     pdf_rows = read_pdf(pdf_path)
     report = overlay_pdf(indicators, pdf_rows, meta["pdfVersion"])
+    in_pdf = sum(i["inRegister"] for i in indicators)
     after = collections.Counter(i["geschiktheid"] for i in indicators)
     report_latest = overlay_latest(indicators, latest)
     after_latest = collections.Counter(i["geschiktheid"] for i in indicators)
+    assessed = len(indicators)
+    # The register: the v0.94 Goed printout plus the v0.91 Gewenst indicators.
+    indicators = [
+        i for i in indicators
+        if i["slug"] in report_latest["kept"] or (i["inRegister"] and i["geschiktheid"] == "gewenst")
+    ]
+    meta["assessedCount"] = assessed
 
     questions = build_questions(indicators, matrix, v83c)
     action_ids = {a["id"] for a in actions}
@@ -777,7 +797,8 @@ def main() -> None:
     for ind in indicators:
         ind.pop("_vraagTitle", None)
         ind.pop("_vraagTitleLatest", None)
-        if not ind["bronUrl"] and ind["geschiktheid"] in ("goed", "gewenst"):
+        ind.pop("inRegister", None)
+        if not ind["bronUrl"]:
             warn(f"{ind['id']}: no source link ({ind['name']})")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
@@ -815,12 +836,12 @@ export const actions: BlueprintAction[] = {ts(actions)};
     )
 
     # ------------------------------------------------------------------ report
-    print(f"\nIndicators: {len(indicators)}")
+    print(f"\nIndicators assessed: {assessed}")
     print("  v0.9 (Excel):   " + ", ".join(f"{g} {before[g]}" for g in GESCHIKTHEID))
     print("  after v0.91:    " + ", ".join(f"{g} {after[g]}" for g in GESCHIKTHEID))
     print(f"  PDF rows: {len(pdf_rows)} (" + ", ".join(
         f"{g} {sum(1 for r in pdf_rows if r['geschiktheid'] == g)}" for g in ("goed", "gewenst")) + ")")
-    print(f"  in register (matched to PDF): {sum(i['inRegister'] for i in indicators)}")
+    print(f"  matched to PDF: {in_pdf}")
     for cid, name, old, new in report["changed"]:
         print(f"  changed  {cid}: {old} → {new}  ({name})")
     for r in report["unmatched"]:
@@ -831,7 +852,7 @@ export const actions: BlueprintAction[] = {ts(actions)};
     for i in report["dropped"]:
         print(f"  not in v0.91 {i['id']} ({i['geschiktheid']}): {i['name']}")
     v = latest["version"]
-    reg_goed = [i for i in indicators if i["inRegister"] and i["geschiktheid"] == "goed"]
+    reg_goed = indicators
     print(f"\nv{v} ({latest['date']}): {len(latest['rows'])} Goed rows")
     print("  after v" + v + ":    " + ", ".join(f"{g} {after_latest[g]}" for g in GESCHIKTHEID))
     print(f"  stated in printout: {latest['stated']}")
@@ -845,9 +866,11 @@ export const actions: BlueprintAction[] = {ts(actions)};
     for i in report_latest["added"]:
         print(f"  added    {i['id']} ({i['vraagId']}): {i['name']}")
     for i in report_latest["removed"]:
-        print(f"  no longer in Goed selection {i['id']} ({i['indeling']}): {i['name']}")
-    print(f"Register (Goed v{v} + Gewenst v{meta['pdfVersion']}): {sum(i['inRegister'] for i in indicators)}")
-    print(f"Monitoringsvragen: {len(questions)} (in register: {sum(q['inRegister'] for q in questions)})")
+        print(f"  no longer in Goed selection (dropped) {i['id']} ({i['indeling']}): {i['name']}")
+    reg = collections.Counter(i["geschiktheid"] for i in indicators)
+    print(f"Register (exported): {len(indicators)} indicators — goed {reg['goed']} (v{v}), "
+          f"gewenst {reg['gewenst']} (v{meta['pdfVersion']})")
+    print(f"Monitoringsvragen: {len(questions)}")
     print(f"Blauwdruk acties: {len(actions)} (with vragen: {sum(1 for a in actions if a['vraagIds'])})")
     print(f"Timeline events: {len(meta['timeline'])}")
     if warnings:

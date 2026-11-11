@@ -48,8 +48,6 @@ function changeText(c: IndicatorChange) {
   switch (c.field) {
     case "added":
       return <>Nieuw toegevoegd aan het register.</>;
-    case "register":
-      return <>Staat niet meer in de selectie ‘Goed’ en daarom niet meer in het register.</>;
     case "name":
       return <>Naam was <strong>‘{c.from}’</strong>.</>;
     case "geschiktheid":
@@ -82,16 +80,12 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
   const i = getIndicator(slug);
   if (!i) notFound();
   const question = getQuestion(i.vraagId);
-  const siblings = question
-    ? indicatorsOf(question)
-        .filter((s) => s.slug !== i.slug)
-        .sort((a, b) => Number(b.inRegister) - Number(a.inRegister))
-    : [];
+  const siblings = question ? indicatorsOf(question).filter((s) => s.slug !== i.slug) : [];
   const metaFields = [i.dataverzamelaar, i.type, i.frequentie, i.meestRecentJaar, i.schaalniveau, i.openbaar];
   const sparse = metaFields.filter((v) => v === null).length >= 4;
   const host = hostOf(i.bronUrl);
   const schaal = schaalOf(i);
-  // The toelichting and "Benodigd voor Goed" were written for the v0.9 assessment.
+  // The toelichting and "Benodigd voor Geschikt" were written for the v0.9 assessment.
   const assessedAs = originalGeschiktheid(i);
   const reassessed = assessedAs !== i.geschiktheid;
 
@@ -106,11 +100,7 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
             </span>
             {i.indeling && <span className="dmi-tag text-[11px] text-muted-foreground">{i.id}</span>}
             <GeschiktheidBadge value={i.geschiktheid} size="md" />
-            {i.inRegister ? (
-              <span className="text-xs text-dmi-navy/70">Opgenomen in register v{meta.version}</span>
-            ) : (
-              <span className="text-xs text-muted-foreground">Niet opgenomen in register v{meta.version}</span>
-            )}
+            <span className="text-xs text-dmi-navy/70">Opgenomen in register v{meta.version}</span>
           </div>
           <h1 className="mt-3 max-w-4xl font-heading text-3xl font-semibold tracking-tight text-dmi-navy sm:text-4xl">
             {i.name}
@@ -160,7 +150,7 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
                 <div className="flex gap-3 rounded-xl border border-dmi-gold/50 bg-[#fdf6e6] p-4">
                   <Lightbulb className="mt-0.5 size-4 shrink-0 text-[#8a5a12]" />
                   <div>
-                    <p className="text-xs font-medium text-[#7a5410]">Benodigd voor ‘Goed’</p>
+                    <p className="text-xs font-medium text-[#7a5410]">Benodigd voor ‘Geschikt’</p>
                     <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{i.benodigdVoorGoed}</p>
                   </div>
                 </div>

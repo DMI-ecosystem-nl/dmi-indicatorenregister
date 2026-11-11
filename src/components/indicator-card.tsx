@@ -26,7 +26,6 @@ export function IndicatorCard({
       href={href}
       className={cn(
         "group relative flex h-full flex-col gap-3 rounded-xl border border-border bg-white p-4 shadow-dmi-sm transition-all hover:-translate-y-0.5 hover:border-dmi-blue-200 hover:shadow-dmi-md",
-        !i.inRegister && "bg-white/70",
         className
       )}
     >

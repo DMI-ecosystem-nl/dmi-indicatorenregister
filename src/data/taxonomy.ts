@@ -1,7 +1,7 @@
 // Hand-maintained display taxonomy: labels, order, icons and colours.
 // The generator (scripts/extract-register.py) never touches this file.
 
-import type { Actielijn, DomainCode, Geschiktheid } from "./types";
+import type { Actielijn, DomainCode, Geschiktheid, RegisterGeschiktheid } from "./types";
 
 export interface DomainInfo {
   code: DomainCode;
@@ -105,8 +105,12 @@ export function domainBySlug(slug: string): DomainInfo | undefined {
 
 export const geschiktheidOrder: Geschiktheid[] = ["goed", "gewenst", "beperkt", "niet"];
 
+/** The assessments in the register, in display and filter order. */
+export const registerGeschiktheid: RegisterGeschiktheid[] = ["goed", "gewenst"];
+
+/** "goed" is called "Geschikt" on the site (the sources still say "Goed"). */
 export const geschiktheidLabels: Record<Geschiktheid, string> = {
-  goed: "Goed",
+  goed: "Geschikt",
   gewenst: "Gewenst",
   beperkt: "Beperkt",
   niet: "Niet",

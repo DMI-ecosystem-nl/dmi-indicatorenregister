@@ -3,8 +3,14 @@
 /** DMI-domein letter as used in the register ("A. Bouwen" → "A"). */
 export type DomainCode = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "X";
 
-/** Outcome of the indicator assessment. */
+/**
+ * Outcome of the indicator assessment. "goed" is shown as "Geschikt";
+ * the data keeps the value used in the source documents.
+ */
 export type Geschiktheid = "goed" | "gewenst" | "beperkt" | "niet";
+
+/** The assessments that are in the register (Beperkt and Niet are left out). */
+export type RegisterGeschiktheid = Extract<Geschiktheid, "goed" | "gewenst">;
 
 /** G40 Blauwdruk actielijn letter. */
 export type Actielijn = "A" | "B" | "C" | "D" | "E" | "F";
@@ -15,11 +21,8 @@ export type JaNee = "ja" | "nee" | "beperkt" | "onduidelijk";
 export interface IndicatorChange {
   /** Register version that made the change, e.g. "0.94". */
   version: string;
-  /**
-   * "added" = new in this version; "register" = left the register (no longer
-   * in the Goed selection); the other fields carry the old and new value.
-   */
-  field: "geschiktheid" | "domain" | "name" | "register" | "added";
+  /** "added" = new in this version; the other fields carry the old and new value. */
+  field: "geschiktheid" | "domain" | "name" | "added";
   from: string | null;
   to: string | null;
 }
@@ -38,9 +41,7 @@ export interface Indicator {
   /** Register code ("Volgorde register", e.g. "B09"); shared by grouped indicators. */
   indeling: string | null;
   name: string;
-  geschiktheid: Geschiktheid;
-  /** True when the indicator is in the current register (Goed per latest printout + Gewenst). */
-  inRegister: boolean;
+  geschiktheid: RegisterGeschiktheid;
   /** What later register versions changed, oldest first. */
   changes: IndicatorChange[];
   toelichting: string | null;
@@ -95,10 +96,9 @@ export interface MonitoringQuestion {
   variaties: string | null;
   domains: DomainCode[];
   blauwdruk: string[];
+  /** Indicators in the register that answer this question (at least one). */
   indicatorSlugs: string[];
-  counts: Record<Geschiktheid, number>;
-  /** Has at least one Goed or Gewenst indicator. */
-  inRegister: boolean;
+  counts: Record<RegisterGeschiktheid, number>;
   /** V.700+ = additional wish list from the July session. */
   wensenlijst: boolean;
 }
@@ -150,6 +150,8 @@ export interface RegisterMeta {
   excelDate: string;
   pdfVersion: string;
   pdfDate: string;
+  /** Number of indicators assessed across all sources (the register holds Goed and Gewenst). */
+  assessedCount: number;
   intro: string;
   geschiktheidDefinitions: Record<Geschiktheid, string>;
   phases: { code: string; name: string }[];

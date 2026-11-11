@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Catalogue } from "@/components/catalogue";
 import { Container, PageHeader } from "@/components/page-header";
-import { totals } from "@/lib/selectors";
+import { meta, totals } from "@/lib/selectors";
 
 export const metadata: Metadata = { title: "Indicatoren" };
 
@@ -15,9 +15,8 @@ export default function IndicatorenPage() {
         title="Indicatoren"
         description={
           <>
-            {totals.register} indicatoren in het register (Goed of Gewenst), gekozen uit {totals.indicators}{" "}
-            beoordeelde indicatoren. Kies <em>Alle beoordeelde</em> om ook de niet-opgenomen kandidaten te zien,
-            met de reden.
+            Het register v{meta.version} bevat {totals.indicators} indicatoren: {totals.counts.goed} geschikt en{" "}
+            {totals.counts.gewenst} gewenst. Filter op geschiktheid, domein, bron, schaalniveau, type of frequentie.
           </>
         }
       />

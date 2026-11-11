@@ -2,12 +2,16 @@
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { domainOrder, geschiktheidOrder, schaalOrder, type Schaal } from "@/data/taxonomy";
-import type { DomainCode, Geschiktheid } from "@/data/types";
+import { domainOrder, schaalOrder, type Schaal } from "@/data/taxonomy";
+import type { DomainCode, RegisterGeschiktheid } from "@/data/types";
 import type { Filters } from "@/lib/filters";
 
 export type View = "kaarten" | "tabel";
 const VIEWS: View[] = ["kaarten", "tabel"];
+
+/** Geschiktheid in the URL by its label (`g=geschikt,gewenst`); `goed` keeps old links working. */
+const G_PARAM: Record<RegisterGeschiktheid, string> = { goed: "geschikt", gewenst: "gewenst" };
+const G_FROM_PARAM: Record<string, RegisterGeschiktheid> = { geschikt: "goed", goed: "goed", gewenst: "gewenst" };
 
 /**
  * Filter state lives in the query string so every filtered view — and the way
@@ -25,10 +29,14 @@ export function useFilterParams() {
     const domain = searchParams.get("domein")?.toUpperCase() ?? null;
     const type = searchParams.get("type");
     return {
-      scope: searchParams.get("scope") === "alle" ? "alle" : "register",
-      geschiktheid: (searchParams.get("g") ?? "")
-        .split(",")
-        .filter((g): g is Geschiktheid => (geschiktheidOrder as string[]).includes(g)),
+      geschiktheid: [
+        ...new Set(
+          (searchParams.get("g") ?? "")
+            .split(",")
+            .map((g) => G_FROM_PARAM[g])
+            .filter(Boolean)
+        ),
+      ],
       domain: domain && (domainOrder as string[]).includes(domain) ? (domain as DomainCode) : null,
       bron: searchParams.get("bron"),
       schaal: one<Schaal>("schaal", schaalOrder),
@@ -44,8 +52,7 @@ export function useFilterParams() {
   const write = useCallback(
     (next: Filters, nextView: View) => {
       const params = new URLSearchParams();
-      if (next.scope !== "register") params.set("scope", next.scope);
-      if (next.geschiktheid.length) params.set("g", next.geschiktheid.join(","));
+      if (next.geschiktheid.length) params.set("g", next.geschiktheid.map((g) => G_PARAM[g]).join(","));
       if (next.domain) params.set("domein", next.domain.toLowerCase());
       if (next.bron) params.set("bron", next.bron);
       if (next.schaal) params.set("schaal", next.schaal);

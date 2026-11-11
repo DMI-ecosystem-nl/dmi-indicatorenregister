@@ -13,7 +13,7 @@ function sidebarData(): SidebarData {
       domains: totals.domains,
       actions: totals.actions,
       questions: totals.questions,
-      register: totals.register,
+      indicators: totals.indicators,
     },
     domains: domainOrder.map((c) => ({ code: c, slug: domains[c].slug, short: domains[c].short })),
   };

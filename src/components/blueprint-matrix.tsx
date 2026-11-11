@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MousePointer2 } from "lucide-react";
-import { actielijnen, domains, geschiktheidColors, geschiktheidLabels, geschiktheidOrder } from "@/data/taxonomy";
-import type { Actielijn, DomainCode, Geschiktheid } from "@/data/types";
+import { actielijnen, domains, geschiktheidColors, geschiktheidLabels, registerGeschiktheid } from "@/data/taxonomy";
+import type { Actielijn, DomainCode, RegisterGeschiktheid as Geschiktheid } from "@/data/types";
 import { cn } from "@/lib/utils";
 import { GeschiktheidBadge } from "./geschiktheid-badge";
 
@@ -20,7 +20,6 @@ export interface MatrixIndicator {
   code: string;
   name: string;
   geschiktheid: Geschiktheid;
-  inRegister: boolean;
 }
 export interface MatrixRow {
   id: string;
@@ -29,8 +28,6 @@ export interface MatrixRow {
   domain: DomainCode;
   best: Geschiktheid | null;
   codes: string[];
-  register: number;
-  total: number;
   indicators: MatrixIndicator[];
 }
 
@@ -149,22 +146,16 @@ function InfoPanel({ focus, rows }: { focus: Focus | null; rows: MatrixRow[] }) 
         {row ? (
           <>
             <p className="dmi-tag text-[10px] text-dmi-blue">
-              Monitoringsvraag {row.id} · {row.register} van {row.total} in register
+              Monitoringsvraag {row.id} · {row.indicators.length} indicatoren
             </p>
             <p className="font-medium text-dmi-navy">{row.title}</p>
             <ul className="mt-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
               {[...row.indicators]
-                .sort(
-                  (a, b) =>
-                    Number(b.inRegister) - Number(a.inRegister) ||
-                    geschiktheidOrder.indexOf(a.geschiktheid) - geschiktheidOrder.indexOf(b.geschiktheid)
-                )
+                .sort((a, b) => registerGeschiktheid.indexOf(a.geschiktheid) - registerGeschiktheid.indexOf(b.geschiktheid))
                 .map((i) => (
                   <li key={i.slug} className="flex items-center gap-2 text-xs">
                     <span className="dmi-tag w-16 shrink-0 text-[10px] text-muted-foreground">{i.code}</span>
-                    <span className={cn("min-w-0 flex-1 truncate", i.inRegister ? "text-dmi-navy" : "text-muted-foreground")}>
-                      {i.name}
-                    </span>
+                    <span className="min-w-0 flex-1 truncate text-dmi-navy">{i.name}</span>
                     <GeschiktheidBadge value={i.geschiktheid} />
                   </li>
                 ))}
@@ -180,9 +171,7 @@ function InfoPanel({ focus, rows }: { focus: Focus | null; rows: MatrixRow[] }) 
                 <li key={r.id} className="flex items-center gap-2 text-xs">
                   <span className="dmi-tag w-12 shrink-0 text-[10px] text-dmi-blue">{r.id}</span>
                   <span className="min-w-0 flex-1 truncate text-dmi-navy">{r.title}</span>
-                  <span className="shrink-0 tabular-nums text-muted-foreground">
-                    {r.register}/{r.total}
-                  </span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">{r.indicators.length}</span>
                   {r.best && <GeschiktheidBadge value={r.best} />}
                 </li>
               ))}
@@ -198,7 +187,7 @@ function InfoPanel({ focus, rows }: { focus: Focus | null; rows: MatrixRow[] }) 
 function Legend() {
   return (
     <ul className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
-      {geschiktheidOrder.map((g) => (
+      {registerGeschiktheid.map((g) => (
         <li key={g} className="flex items-center gap-1.5">
           <span className="size-3 rounded-[3px]" style={{ backgroundColor: geschiktheidColors[g] }} />
           Beste indicator: {geschiktheidLabels[g]}
@@ -208,7 +197,7 @@ function Legend() {
         <span className="size-3 rounded-[3px] bg-dmi-gray-100" /> Geen koppeling
       </li>
       <li className="flex items-center gap-1.5">
-        <span className="text-[#8a3f17]">⚠</span> Actie zonder ‘Goed’ indicator
+        <span className="text-[#8a3f17]">⚠</span> Actie zonder geschikte indicator
       </li>
     </ul>
   );

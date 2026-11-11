@@ -1,5 +1,5 @@
-import { geschiktheidColors, geschiktheidLabels, geschiktheidOrder } from "@/data/taxonomy";
-import type { Geschiktheid } from "@/data/types";
+import { geschiktheidColors, geschiktheidLabels, registerGeschiktheid } from "@/data/taxonomy";
+import type { RegisterGeschiktheid as Geschiktheid } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,7 +11,7 @@ export function CoverageBar({
   total,
   className,
   height = 8,
-  include = geschiktheidOrder,
+  include = registerGeschiktheid,
 }: {
   counts: Record<Geschiktheid, number>;
   total?: number;
@@ -44,7 +44,7 @@ export function CoverageBar({
 
 export function CoverageLegend({
   counts,
-  include = geschiktheidOrder,
+  include = registerGeschiktheid,
   className,
 }: {
   counts?: Record<Geschiktheid, number>;

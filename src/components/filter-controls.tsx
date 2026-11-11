@@ -152,7 +152,7 @@ export function ToggleGroup<T extends string>({
 }: {
   label: string;
   values: T[];
-  options: { value: T; label: string; dot?: string }[];
+  options: { value: T; label: React.ReactNode; dot?: string }[];
   onToggle: (v: T) => void;
 }) {
   return (

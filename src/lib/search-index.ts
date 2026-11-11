@@ -1,3 +1,4 @@
+import { geschiktheidLabels } from "@/data/taxonomy";
 import { actions, indicators, questions } from "@/lib/selectors";
 
 export interface SearchItem {
@@ -30,7 +31,7 @@ export function buildSearchIndex(): SearchItem[] {
       href: `/indicatoren/${i.slug}`,
       title: i.name,
       code: i.indeling ?? i.id,
-      sub: [i.bron, i.geschiktheid].filter(Boolean).join(" · "),
+      sub: [i.bron, geschiktheidLabels[i.geschiktheid]].filter(Boolean).join(" · "),
     })),
   ];
 }

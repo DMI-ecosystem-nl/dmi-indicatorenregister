@@ -1,14 +1,10 @@
 import { schaalOf } from "@/lib/selectors";
 import type { Schaal } from "@/data/taxonomy";
-import type { DomainCode, Geschiktheid, Indicator } from "@/data/types";
-
-export type Scope = "register" | "alle";
+import type { DomainCode, Indicator, RegisterGeschiktheid } from "@/data/types";
 
 export interface Filters {
-  /** "register" = the current register (Goed + Gewenst), "alle" = every assessed indicator. */
-  scope: Scope;
-  /** Empty = no restriction within the scope. */
-  geschiktheid: Geschiktheid[];
+  /** Empty = Geschikt and Gewenst. */
+  geschiktheid: RegisterGeschiktheid[];
   domain: DomainCode | null;
   bron: string | null;
   schaal: Schaal | null;
@@ -18,7 +14,6 @@ export interface Filters {
 }
 
 export const emptyFilters: Filters = {
-  scope: "register",
   geschiktheid: [],
   domain: null,
   bron: null,
@@ -30,7 +25,6 @@ export const emptyFilters: Filters = {
 
 export function activeFilterCount(filters: Filters): number {
   return (
-    (filters.scope !== "register" ? 1 : 0) +
     (filters.geschiktheid.length ? 1 : 0) +
     [filters.domain, filters.bron, filters.schaal, filters.type, filters.frequentie].filter(
       (v) => v !== null
@@ -68,7 +62,6 @@ function haystack(i: Indicator): string {
 export function filterIndicators(items: Indicator[], filters: Filters): Indicator[] {
   const terms = filters.search.trim().toLowerCase().split(/\s+/).filter(Boolean);
   return items.filter((i) => {
-    if (filters.scope === "register" && !i.inRegister) return false;
     if (filters.geschiktheid.length && !filters.geschiktheid.includes(i.geschiktheid))
       return false;
     if (filters.domain && i.domain !== filters.domain) return false;

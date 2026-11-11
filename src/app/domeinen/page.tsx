@@ -19,7 +19,7 @@ export default function DomeinenPage() {
         title="Indicatoren per DMI-domein"
         description="Het register is ingedeeld in acht DMI-domeinen plus een domein met contextgegevens. Per domein zie je de monitoringsvragen en de indicatoren die ze beantwoorden."
       >
-        <CoverageLegend counts={totals.allCounts} />
+        <CoverageLegend counts={totals.counts} />
       </PageHeader>
       <Container className="py-8">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -45,8 +45,8 @@ export default function DomeinenPage() {
                   <CoverageBar counts={s.counts} />
                   <div className="flex items-baseline justify-between text-xs text-muted-foreground">
                     <span>
-                      <strong className="text-base text-dmi-navy tabular-nums">{s.register}</strong> in register ·{" "}
-                      {s.total} beoordeeld · {s.questions} vragen
+                      <strong className="text-base text-dmi-navy tabular-nums">{s.total}</strong> indicatoren ·{" "}
+                      {s.questions} vragen
                     </span>
                     <ArrowRight className="size-4 text-dmi-blue transition-transform group-hover:translate-x-0.5" />
                   </div>

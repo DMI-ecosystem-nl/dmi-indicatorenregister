@@ -36,8 +36,7 @@ async function DomeinPageContent({ params }: { params: PageProps<"/domeinen/[slu
   const counts = countByGeschiktheid(items);
   const qs = questionsOfDomain(d.code)
     .map((q) => ({ q, items: indicatorsOf(q).filter((i) => i.domain === d.code) }))
-    .sort((a, b) => Number(b.q.inRegister) - Number(a.q.inRegister) || a.q.id.localeCompare(b.q.id));
-  const register = items.filter((i) => i.inRegister).length;
+    .sort((a, b) => a.q.id.localeCompare(b.q.id));
 
   return (
     <>
@@ -55,8 +54,8 @@ async function DomeinPageContent({ params }: { params: PageProps<"/domeinen/[slu
           <CoverageBar counts={counts} height={10} />
           <CoverageLegend counts={counts} />
           <p className="text-sm text-muted-foreground">
-            <strong className="text-dmi-navy">{register}</strong> indicatoren in het register, verdeeld over{" "}
-            {qs.filter((x) => x.items.some((i) => i.inRegister)).length} monitoringsvragen.{" "}
+            <strong className="text-dmi-navy">{items.length}</strong> indicatoren in het register, verdeeld over{" "}
+            {qs.length} monitoringsvragen.{" "}
             <Link href={`/indicatoren?domein=${d.code.toLowerCase()}`} className="text-dmi-blue hover:underline">
               Bekijk in de catalogus
             </Link>

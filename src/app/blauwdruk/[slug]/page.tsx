@@ -86,7 +86,7 @@ async function ActiePageContent({ params }: { params: PageProps<"/blauwdruk/[slu
               qs.map((q) => <QuestionBlock key={q.id} question={q} items={indicatorsOf(q)} />)
             ) : (
               <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-                Aan deze actie zijn nog geen monitoringsvragen met indicatoren gekoppeld.
+                Voor deze actie staat nog geen indicator in het register.
               </p>
             )}
           </div>

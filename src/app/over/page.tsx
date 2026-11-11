@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileSpreadsheet, FileText } from "lucide-react";
+import { FileSpreadsheet, FileText, Mail } from "lucide-react";
 import { Container, PageHeader } from "@/components/page-header";
 import { formatDate } from "@/lib/format";
 import { indicators, meta, totals } from "@/lib/selectors";
@@ -9,8 +9,6 @@ import { indicators, meta, totals } from "@/lib/selectors";
 function changed(version: string, field: string) {
   return indicators.filter((i) => i.changes.some((c) => c.version === version && c.field === field)).length;
 }
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export const metadata: Metadata = { title: "Over dit register" };
 
@@ -45,23 +43,27 @@ export default function OverPage() {
             <h2 className="font-heading text-xl font-semibold text-dmi-navy">Verwerking van de bronnen</h2>
             <ul className="list-disc space-y-1.5 pl-5">
               <li>
-                De basis is het Excel-register v{meta.excelVersion} ({formatDate(meta.excelDate)}): alle beoordeelde
-                indicatoren, de Blauwdruk G40-vertaling en de monitoringsvragen.
+                De uitdraai v{v} ({formatDate(meta.versionDate)}) bepaalt welke indicatoren ‘Geschikt’ zijn (in de bron:
+                ‘Goed’). Dat zijn er {totals.counts.goed}. Hieruit komen ook de registercodes (A01…) en de metadata:
+                beheerder, meetmethode, normen, type data, dekking en model of meting.
               </li>
               <li>
-                De printout v{pv} ({formatDate(meta.pdfDate)}) bepaalt welke indicatoren ‘Gewenst’ zijn. In v{pv} zijn{" "}
-                {plural(changed(pv, "domain"), "indicator", "indicatoren")} naar een ander DMI-domein verplaatst en is bij{" "}
-                {plural(changed(pv, "geschiktheid"), "indicator", "indicatoren")} de geschiktheid aangepast.
+                De printout v{pv} ({formatDate(meta.pdfDate)}) bepaalt welke indicatoren ‘Gewenst’ zijn. Dat zijn er{" "}
+                {totals.counts.gewenst}.
               </li>
               <li>
-                De uitdraai v{v} ({formatDate(meta.versionDate)}) bepaalt welke indicatoren ‘Goed’ zijn. Hieruit komen ook
-                de registercodes (A01…) en de nieuwe metadata: beheerder, meetmethode, normen, type data, dekking en
-                model of meting. In v{v} zijn {plural(changed(v, "added"), "indicator", "indicatoren")} toegevoegd,{" "}
-                {plural(changed(v, "geschiktheid"), "indicator", "indicatoren")} opgewaardeerd naar ‘Goed’,{" "}
-                {plural(changed(v, "domain"), "indicator", "indicatoren")} naar een ander domein verplaatst en{" "}
-                {plural(changed(v, "name"), "indicator", "indicatoren")} hernoemd.{" "}
-                {plural(changed(v, "register"), "indicator", "indicatoren")} die eerder ‘Goed’ waren, staan niet meer in de
-                uitdraai en daarom niet meer in het register.
+                Indicatoren met ‘Beperkt’ of ‘Niet’, en eerder geschikte indicatoren die niet in de uitdraai v{v} staan,
+                zijn niet opgenomen. In totaal zijn {meta.assessedCount} indicatoren beoordeeld.
+              </li>
+              <li>
+                De toelichting op de beoordeling, de Blauwdruk G40-vertaling en de monitoringsvragen komen uit het
+                Excel-register v{meta.excelVersion} ({formatDate(meta.excelDate)}).
+              </li>
+              <li>
+                Wijzigingen bij de indicatoren in het register. In de printout v{pv} ({formatDate(meta.pdfDate)}):{" "}
+                {changed(pv, "domain")} naar een ander domein verplaatst. In v{v}: {changed(v, "added")} toegevoegd,{" "}
+                {changed(v, "geschiktheid")} opgewaardeerd naar ‘Geschikt’, {changed(v, "domain")} naar een ander domein
+                verplaatst en {changed(v, "name")} hernoemd.
               </li>
               <li>Elke wijziging staat op de pagina van de indicator.</li>
               <li>
@@ -72,12 +74,23 @@ export default function OverPage() {
           </section>
         </div>
         <aside className="space-y-4">
+          <div className="rounded-xl border border-border bg-white p-5 text-sm shadow-dmi-sm">
+            <h2 className="dmi-tag text-[10px] text-muted-foreground">Contact</h2>
+            <p className="mt-2">Heb je een vraag of opmerking over het register? Mail het DMI-team.</p>
+            <a
+              href="mailto:dmiteam@minienw.nl?subject=DMI%20indicatorenregister"
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-dmi-navy px-3 py-2 font-medium text-white hover:bg-dmi-blue"
+            >
+              <Mail className="size-4" /> Mail het DMI-team
+            </a>
+            <p className="mt-2 text-xs text-muted-foreground">dmiteam@minienw.nl</p>
+          </div>
           <div className="rounded-xl border border-border bg-white p-5 shadow-dmi-sm">
             <h2 className="dmi-tag text-[10px] text-muted-foreground">In cijfers</h2>
             <dl className="mt-3 grid grid-cols-2 gap-4">
               {[
-                [totals.register, "in register"],
-                [totals.indicators, "beoordeeld"],
+                [totals.indicators, "in register"],
+                [meta.assessedCount, "beoordeeld"],
                 [totals.questions, "monitoringsvragen"],
                 [totals.actions, "G40-acties"],
                 [totals.bronnen, "bronnen"],

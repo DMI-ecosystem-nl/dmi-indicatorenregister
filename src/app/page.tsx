@@ -39,7 +39,7 @@ const ENTRIES = [
 
 export default function Home() {
   const stats = domainStats();
-  const gewenst = indicators.filter((i) => i.inRegister && i.geschiktheid === "gewenst");
+  const gewenst = indicators.filter((i) => i.geschiktheid === "gewenst");
 
   return (
     <>
@@ -79,8 +79,8 @@ export default function Home() {
             <HeroItem>
               <dl className="mt-12 grid max-w-4xl grid-cols-2 gap-6 sm:grid-cols-4">
                 {[
-                  [totals.register, "indicatoren in het register"],
-                  [totals.indicators, "indicatoren beoordeeld"],
+                  [totals.indicators, "indicatoren in het register"],
+                  [meta.assessedCount, "indicatoren beoordeeld"],
                   [totals.questions, "monitoringsvragen"],
                   [totals.actions, "Blauwdruk G40-acties"],
                 ].map(([n, l]) => (
@@ -129,7 +129,7 @@ export default function Home() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="font-heading text-2xl font-semibold text-dmi-navy">Geschiktheid per domein</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Alle beoordeelde indicatoren, naar uitkomst van de beoordeling.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Indicatoren in het register: geschikt of gewenst.</p>
               </div>
               <CoverageLegend />
             </div>

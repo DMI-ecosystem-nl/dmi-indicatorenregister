@@ -7,14 +7,14 @@ import {
   frequentieOrder,
   geschiktheidColors,
   geschiktheidLabels,
-  geschiktheidOrder,
   indicatorTypeLabel,
   indicatorTypes,
   schaalLabels,
+  registerGeschiktheid,
   schaalOrder,
   type Schaal,
 } from "@/data/taxonomy";
-import type { DomainCode, Geschiktheid } from "@/data/types";
+import type { DomainCode } from "@/data/types";
 import { emptyFilters, type Filters } from "@/lib/filters";
 import { bronOptions, totals } from "@/lib/selectors";
 import type { View } from "@/lib/use-filter-params";
@@ -43,7 +43,6 @@ export function FilterBar({
   onViewChange: (v: View) => void;
 }) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
-  const visibleG: Geschiktheid[] = filters.scope === "register" ? ["goed", "gewenst"] : geschiktheidOrder;
 
   const active: ActiveFilter[] = [
     ...(filters.search.trim()
@@ -74,25 +73,18 @@ export function FilterBar({
           placeholder="Zoek op naam, bron of code"
           label="Zoek indicatoren"
         />
-        <Segmented
-          label="Reikwijdte"
-          value={filters.scope}
-          onChange={(scope) =>
-            set({
-              scope,
-              geschiktheid:
-                scope === "alle" ? filters.geschiktheid : filters.geschiktheid.filter((g) => g === "goed" || g === "gewenst"),
-            })
-          }
-          options={[
-            { value: "register", label: <>Register <span className="tabular-nums opacity-70">{totals.register}</span></> },
-            { value: "alle", label: <>Alle beoordeelde <span className="tabular-nums opacity-70">{totals.indicators}</span></> },
-          ]}
-        />
         <ToggleGroup
           label="Geschiktheid"
           values={filters.geschiktheid}
-          options={visibleG.map((g) => ({ value: g, label: geschiktheidLabels[g], dot: geschiktheidColors[g] }))}
+          options={registerGeschiktheid.map((g) => ({
+            value: g,
+            label: (
+              <>
+                {geschiktheidLabels[g]} <span className="tabular-nums opacity-70">{totals.counts[g]}</span>
+              </>
+            ),
+            dot: geschiktheidColors[g],
+          }))}
           onToggle={(g) =>
             set({
               geschiktheid: filters.geschiktheid.includes(g)
@@ -140,7 +132,7 @@ export function FilterBar({
         count={resultCount}
         noun={["indicator", "indicatoren"]}
         active={active}
-        onClear={() => onChange({ ...emptyFilters, scope: filters.scope })}
+        onClear={() => onChange(emptyFilters)}
       >
         <Segmented
           label="Weergave"

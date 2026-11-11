@@ -4,7 +4,7 @@ import { ArrowRight, Grid3x3 } from "lucide-react";
 import { CoverageBar, CoverageLegend } from "@/components/coverage-bar";
 import { Container, PageHeader } from "@/components/page-header";
 import { actielijnen, actielijnOrder } from "@/data/taxonomy";
-import { actions, countByGeschiktheid, indicatorsOf, questionsOfAction } from "@/lib/selectors";
+import { actions, countByGeschiktheid, indicatorsOfAction, questionsOfAction } from "@/lib/selectors";
 
 export const metadata: Metadata = { title: "Blauwdruk G40" };
 
@@ -46,8 +46,8 @@ export default function BlauwdrukPage() {
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {items.map((a) => {
                   const qs = questionsOfAction(a);
-                  const inds = qs.flatMap(indicatorsOf);
-                  const counts = countByGeschiktheid(inds);
+                  const inds = indicatorsOfAction(a);
+                  const n = inds.length;
                   return (
                     <Link
                       key={a.id}
@@ -57,10 +57,10 @@ export default function BlauwdrukPage() {
                       <span className="dmi-tag text-xs font-medium text-[#7a5410]">{a.id}</span>
                       <p className="line-clamp-4 text-sm text-dmi-navy">{a.text}</p>
                       <div className="mt-auto space-y-1.5">
-                        <CoverageBar counts={counts} height={6} />
+                        <CoverageBar counts={countByGeschiktheid(inds)} height={6} />
                         <p className="flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
-                          <span>
-                            {qs.length} vragen · {counts.goed + counts.gewenst} geschikte indicatoren
+                          <span className={n === 0 ? "text-[#8a3f17]" : undefined}>
+                            {n === 0 ? "Nog geen indicator in het register" : `${qs.length} vragen · ${n} indicatoren`}
                           </span>
                           <ArrowRight className="size-3.5 text-dmi-blue transition-transform group-hover:translate-x-0.5" />
                         </p>
