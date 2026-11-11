@@ -4,6 +4,7 @@ import { domainOrder, domains } from "@/data/taxonomy";
 import { meta, totals } from "@/lib/selectors";
 import { buildSearchIndex } from "@/lib/search-index";
 import { CommandSearch } from "./command-search";
+import { FeedbackDialog } from "./feedback-dialog";
 import { MobileMenu } from "./mobile-menu";
 import { SidebarNav, type SidebarData } from "./sidebar-nav";
 
@@ -66,7 +67,8 @@ export function SiteSidebar() {
         <div className="flex-1 overflow-y-auto px-3 py-5">
           <SidebarNav data={data} />
         </div>
-        <div className="border-t border-border p-3">
+        <div className="space-y-3 border-t border-border p-3">
+          <FeedbackDialog variant="sidebar" />
           <ConceptCard />
         </div>
       </aside>
@@ -76,6 +78,7 @@ export function SiteSidebar() {
           <Brand />
           <div className="ml-auto flex items-center gap-1">
             <CommandSearch items={index} variant="icon" />
+            <FeedbackDialog variant="icon" />
             <MobileMenu data={data}>
               <ConceptCard />
             </MobileMenu>

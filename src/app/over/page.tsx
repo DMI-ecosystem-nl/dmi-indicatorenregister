@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FileSpreadsheet, FileText, Mail } from "lucide-react";
+import { FeedbackDialog } from "@/components/feedback-dialog";
 import { Container, PageHeader } from "@/components/page-header";
 import { formatDate } from "@/lib/format";
 import { indicators, meta, totals } from "@/lib/selectors";
@@ -84,6 +85,12 @@ export default function OverPage() {
               <Mail className="size-4" /> Mail het DMI-team
             </a>
             <p className="mt-2 text-xs text-muted-foreground">dmiteam@minienw.nl</p>
+            <p className="mt-4 border-t border-border pt-4">
+              Zie je een fout of heb je een suggestie? Geef feedback. Je bericht komt als openbare melding op GitHub.
+            </p>
+            <div className="mt-3">
+              <FeedbackDialog variant="inline" />
+            </div>
           </div>
           <div className="rounded-xl border border-border bg-white p-5 shadow-dmi-sm">
             <h2 className="dmi-tag text-[10px] text-muted-foreground">In cijfers</h2>

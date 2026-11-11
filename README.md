@@ -38,4 +38,20 @@ npm run dev     # http://localhost:3000
 npm run build
 ```
 
-Hosting: Vercel (statische output, geen environment variables nodig).
+Hosting: Vercel. Alle pagina's zijn statisch; alleen `/api/feedback` draait op de server.
+
+## Feedbackknop
+
+De knop *Feedback geven* (zijbalk, mobiele kop, pagina Over) maakt via `POST /api/feedback`
+een issue aan in [DMI-ecosystem-nl/dmi-indicatorenregister](https://github.com/DMI-ecosystem-nl/dmi-indicatorenregister/issues),
+met de labels `feedback` plus `inhoud`, `enhancement`, `question` of `bug`.
+
+| Variabele | Waarde |
+| --- | --- |
+| `GITHUB_FEEDBACK_TOKEN` | Fine-grained personal access token; resource owner `DMI-ecosystem-nl`, alleen deze repository, permissie *Issues: Read and write*. |
+| `GITHUB_FEEDBACK_REPO` | Optioneel, `owner/naam`. Standaard `DMI-ecosystem-nl/dmi-indicatorenregister`. |
+
+Zet ze in Vercel (Production en Preview) en lokaal in `.env.local`. Zonder token toont de knop een
+melding met het e-mailadres van het DMI-team. Bescherming tegen misbruik: same-origin-check, honeypot,
+lengtegrenzen, max. 5 berichten per IP per 10 minuten (per serverinstantie), en `@mentions` worden onschadelijk gemaakt.
+De repository is openbaar: het formulier vraagt bezoekers geen persoonsgegevens in te vullen.
