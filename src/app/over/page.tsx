@@ -4,18 +4,11 @@ import { FileSpreadsheet, FileText, Mail } from "lucide-react";
 import { FeedbackDialog } from "@/components/feedback-dialog";
 import { Container, PageHeader } from "@/components/page-header";
 import { formatDate } from "@/lib/format";
-import { indicators, meta, totals } from "@/lib/selectors";
-
-/** Count indicators with at least one change of this kind in this version. */
-function changed(version: string, field: string) {
-  return indicators.filter((i) => i.changes.some((c) => c.version === version && c.field === field)).length;
-}
+import { meta, totals } from "@/lib/selectors";
 
 export const metadata: Metadata = { title: "Over dit register" };
 
 export default function OverPage() {
-  const v = meta.version;
-  const pv = meta.pdfVersion;
   return (
     <>
       <PageHeader
@@ -44,29 +37,18 @@ export default function OverPage() {
             <h2 className="font-heading text-xl font-semibold text-dmi-navy">Verwerking van de bronnen</h2>
             <ul className="list-disc space-y-1.5 pl-5">
               <li>
-                De uitdraai v{v} ({formatDate(meta.versionDate)}) bepaalt welke indicatoren ‘Geschikt’ zijn (in de bron:
-                ‘Goed’). Dat zijn er {totals.counts.goed}. Hieruit komen ook de registercodes (A01…) en de metadata:
-                beheerder, meetmethode, normen, type data, dekking en model of meting.
+                Alle indicatoren komen uit de uitdraai van het register, versie {meta.version} (
+                {formatDate(meta.versionDate)}). Daarin staan {totals.counts.goed} geschikte en{" "}
+                {totals.counts.gewenst} gewenste indicatoren.
               </li>
               <li>
-                De printout v{pv} ({formatDate(meta.pdfDate)}) bepaalt welke indicatoren ‘Gewenst’ zijn. Dat zijn er{" "}
-                {totals.counts.gewenst}.
+                Uit dezelfde uitdraai komen per indicator de beschrijving, de link naar de brondata, het hoofddomein en
+                de andere relevante domeinen, de koppeling met de Blauwdruk G40 en de metadata.
               </li>
               <li>
-                Indicatoren met ‘Beperkt’ of ‘Niet’, en eerder geschikte indicatoren die niet in de uitdraai v{v} staan,
-                zijn niet opgenomen. In totaal zijn {meta.assessedCount} indicatoren beoordeeld.
+                De Blauwdruk G40-vertaling, de volledige formulering van de monitoringsvragen en de stand van het proces
+                komen uit het werkbare concept van het register ({formatDate(meta.backgroundDate)}).
               </li>
-              <li>
-                De toelichting op de beoordeling, de Blauwdruk G40-vertaling en de monitoringsvragen komen uit het
-                Excel-register v{meta.excelVersion} ({formatDate(meta.excelDate)}).
-              </li>
-              <li>
-                Wijzigingen bij de indicatoren in het register. In de printout v{pv} ({formatDate(meta.pdfDate)}):{" "}
-                {changed(pv, "domain")} naar een ander domein verplaatst. In v{v}: {changed(v, "added")} toegevoegd,{" "}
-                {changed(v, "geschiktheid")} opgewaardeerd naar ‘Geschikt’, {changed(v, "domain")} naar een ander domein
-                verplaatst en {changed(v, "name")} hernoemd.
-              </li>
-              <li>Elke wijziging staat op de pagina van de indicator.</li>
               <li>
                 Sommige indicator-ID’s komen in de bron twee keer voor. Deze site geeft ze een uniek webadres.
               </li>
@@ -96,8 +78,8 @@ export default function OverPage() {
             <h2 className="dmi-tag text-[10px] text-muted-foreground">In cijfers</h2>
             <dl className="mt-3 grid grid-cols-2 gap-4">
               {[
-                [totals.indicators, "in register"],
-                [meta.assessedCount, "beoordeeld"],
+                [totals.counts.goed, "geschikt"],
+                [totals.counts.gewenst, "gewenst"],
                 [totals.questions, "monitoringsvragen"],
                 [totals.actions, "G40-acties"],
                 [totals.bronnen, "bronnen"],
@@ -116,10 +98,11 @@ export default function OverPage() {
               {meta.sources.map((s) => {
                 const Icon = s.format === "pdf" ? FileText : FileSpreadsheet;
                 return (
-                  <li key={s.version} className="flex gap-2">
+                  <li key={s.title} className="flex gap-2">
                     <Icon className={s.format === "pdf" ? "size-4 shrink-0 text-[#a23b38]" : "size-4 shrink-0 text-[#2f7d4f]"} />
                     <span>
-                      {s.title} v{s.version}
+                      {s.title}
+                      {s.version && ` v${s.version}`}
                       <span className="block text-xs text-muted-foreground">
                         {formatDate(s.date)} · {s.role}
                       </span>

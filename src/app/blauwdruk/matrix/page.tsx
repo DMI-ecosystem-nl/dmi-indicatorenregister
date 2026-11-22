@@ -21,7 +21,7 @@ export default function MatrixPage() {
         codes: q.blauwdruk,
         indicators: items.map((i) => ({
           slug: i.slug,
-          code: i.indeling ?? i.id,
+          code: i.id,
           name: i.name,
           geschiktheid: i.geschiktheid,
         })),

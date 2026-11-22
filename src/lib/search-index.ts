@@ -30,7 +30,7 @@ export function buildSearchIndex(): SearchItem[] {
       kind: "indicator" as const,
       href: `/indicatoren/${i.slug}`,
       title: i.name,
-      code: i.indeling ?? i.id,
+      code: i.id,
       sub: [i.bron, geschiktheidLabels[i.geschiktheid]].filter(Boolean).join(" · "),
     })),
   ];

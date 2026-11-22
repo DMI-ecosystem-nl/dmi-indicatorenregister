@@ -187,7 +187,7 @@ export default function UserStoriesPage() {
               {[
                 ["US-3", "Definities", "naam, monitoringsvraag, type en eenheid van elke indicator."],
                 ["US-4", "Herkomst", "bron, dataverzamelaar, voorwaarden voor gebruik en actualiteit."],
-                ["US-5", "Berekeningswijze", "toelichting op de beoordeling en, waar ingevuld, de meetmethode."],
+                ["US-5", "Berekeningswijze", "beschrijving van de indicator en, waar ingevuld, de meetmethode."],
               ].map(([id, t, d]) => (
                 <li key={id} className="flex gap-3 rounded-lg border border-border bg-white p-3">
                   <span className="dmi-tag mt-0.5 whitespace-nowrap text-[11px] text-dmi-blue">{id}</span>

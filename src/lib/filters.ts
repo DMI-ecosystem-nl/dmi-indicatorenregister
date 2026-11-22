@@ -36,18 +36,13 @@ export function activeFilterCount(filters: Filters): number {
 function haystack(i: Indicator): string {
   return [
     i.id,
-    i.indeling,
     i.name,
     i.vraagId,
-    i.cluster,
     i.bron,
-    i.bronLabel,
     i.beheerder,
     i.dataverzamelaar,
-    i.toelichting,
+    i.beschrijving,
     i.meetmethode,
-    // Earlier names, so old bookmarks and notes still find the indicator.
-    ...i.changes.filter((c) => c.field === "name").map((c) => c.from),
     i.blauwdruk.join(" "),
   ]
     .filter(Boolean)

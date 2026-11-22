@@ -23,12 +23,15 @@ lucide-react, Motion. Huisstijl: DMI design-system tokens (IBM Plex, navy/goud).
 
 ## Data bijwerken
 
-1. Zet de nieuwe bronbestanden in `source-docs/` (Excel `*Indicatorenregister*.xlsx`, PDF `*indicatorenregister*.pdf`).
-2. `npm run extract` (vereist Python 3 met `openpyxl` en `pdftotext` van poppler).
-3. Controleer de rapportage (aantallen, gewijzigde geschiktheid/domeinen, waarschuwingen).
+1. Zet de nieuwe uitdraai in `source-docs/` (Excel `*Uitdraai <versie>*.xlsx`; de hoogste versie
+   in de bestandsnaam wint).
+2. `npm run extract` (vereist Python 3 met `openpyxl`).
+3. Controleer de rapportage (aantallen en waarschuwingen).
 
-De Excel levert de metadata; de PDF-printout (nieuwere versie) bepaalt opname in het register,
-de indelingscode (A01…), de geschiktheid en het (nieuwe) domein.
+De uitdraai is de enige bron voor de indicatoren: geschiktheid, hoofddomein en relevante domeinen,
+beschrijving, brondata, Blauwdruk G40-koppeling en metadata. Het werkbare concept
+(`*Indicatorenregister*werkbaar concept*.xlsx`) levert alleen achtergrond: de Blauwdruk G40-vertaling,
+de formulering van de monitoringsvragen, de definities en de proces-/tijdlijngegevens.
 
 ## Ontwikkelen
 

@@ -13,7 +13,7 @@ const STEPS = [
   { title: "Blauwdruk G40", text: "Beleidsacties uit de Blauwdruk G40 voor slimme duurzame verstedelijking en mobiliteitsvernieuwing." },
   { title: "Vertaling (fase I)", text: "Per actie: welke doelen (I), hoe adresseren we die (II) en welke data zijn nodig (III)?" },
   { title: "Monitoringsvragen", text: `${totals.questions} monitoringsvragen, verdeeld over de DMI-domeinen.` },
-  { title: "Beoordeling", text: `${meta.assessedCount} bestaande indicatoren beoordeeld, met expertsessies per domein.` },
+  { title: "Beoordeling", text: "Bestaande indicatoren beoordeeld op de criteria hieronder, met expertsessies per domein." },
   { title: "Register", text: `${totals.indicators} indicatoren Geschikt of Gewenst in v${meta.version}. De community toetst deze selectie voor versie 1.0.` },
 ];
 
@@ -55,8 +55,8 @@ export default function MethodiekPage() {
   const maxType = Math.max(...typeCounts.map((t) => t.count));
   const timeline = [
     ...meta.timeline.map((t) => ({ ...t, future: false })),
-    { date: meta.pdfDate, title: `Concept v${meta.pdfVersion} (register-printout)`, future: false },
-    { date: meta.versionDate, title: `Concept v${meta.version} (uitdraai geschikte indicatoren)`, future: false },
+    { date: meta.versionDate, title: `Concept v${meta.version} van het register`, future: false },
+    { date: "2026-11-27", title: "Afronding versie 1.0 van het register", future: true },
     { date: "2026-12-02", title: "Oplevering versie 1.0 indicatorenregister en dashboard", future: true },
   ].sort((a, b) => a.date.localeCompare(b.date));
 
@@ -99,7 +99,7 @@ export default function MethodiekPage() {
             <h2 className="mb-1 font-heading text-xl font-semibold text-dmi-navy">Geschiktheid</h2>
             <p className="mb-4 text-sm text-muted-foreground">
               Elke indicator kreeg een van deze vier beoordelingen. Het register bevat de indicatoren met ‘Geschikt’
-              en ‘Gewenst’. In de bronbestanden heet ‘Geschikt’ nog ‘Goed’.
+              en ‘Gewenst’.
             </p>
             <dl className="space-y-3">
               {geschiktheidOrder.map((g) => (
@@ -170,7 +170,7 @@ export default function MethodiekPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Stand volgens het register v{meta.excelVersion} ({formatDate(meta.excelDate)}).</p>
+          <p className="mt-2 text-xs text-muted-foreground">Stand op {formatDate(meta.backgroundDate)}.</p>
         </section>
 
         <section>

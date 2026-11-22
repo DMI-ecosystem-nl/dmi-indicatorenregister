@@ -1,18 +1,25 @@
 import { cn } from "@/lib/utils";
+import { FieldHelp } from "./field-help";
 
 export function Field({
   label,
+  help,
   children,
   className,
 }: {
   label: string;
+  /** Short explanation behind an info icon next to the label. */
+  help?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   const empty = children === null || children === undefined || children === "";
   return (
     <div className={cn("min-w-0", className)}>
-      <dt className="dmi-tag text-[10px] text-muted-foreground">{label}</dt>
+      <dt className="dmi-tag flex items-center gap-1 text-[10px] text-muted-foreground">
+        {label}
+        {help && <FieldHelp label={label} text={help} />}
+      </dt>
       <dd className={cn("mt-1 text-sm text-dmi-navy", empty && "text-muted-foreground/70")}>
         {empty ? "Nog niet ingevuld" : children}
       </dd>

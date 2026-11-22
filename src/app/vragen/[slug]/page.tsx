@@ -75,7 +75,7 @@ async function VraagPageContent({ params }: { params: PageProps<"/vragen/[slug]"
             );
           })}
           <p className="text-xs text-muted-foreground">
-            Het register volgt versie v{meta.version}. Open een indicator voor de toelichting.
+            Het register volgt versie v{meta.version}. Open een indicator voor de beschrijving en de metadata.
           </p>
         </div>
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">

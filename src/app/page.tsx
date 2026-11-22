@@ -80,7 +80,7 @@ export default function Home() {
               <dl className="mt-12 grid max-w-4xl grid-cols-2 gap-6 sm:grid-cols-4">
                 {[
                   [totals.indicators, "indicatoren in het register"],
-                  [meta.assessedCount, "indicatoren beoordeeld"],
+                  [totals.bronnen, "bronnen en dashboards"],
                   [totals.questions, "monitoringsvragen"],
                   [totals.actions, "Blauwdruk G40-acties"],
                 ].map(([n, l]) => (
@@ -100,7 +100,7 @@ export default function Home() {
       <Container className="space-y-16 py-12">
         <section>
           <h2 className="font-heading text-2xl font-semibold text-dmi-navy">Drie manieren om te zoeken</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Kies de ingang die past bij je vraag, of zoek met ⌘K.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Kies de ingang die past bij je vraag, of zoek in het register.</p>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {ENTRIES.map((e, i) => (
               <Reveal key={e.href} delay={i * 0.08}>
@@ -166,7 +166,7 @@ export default function Home() {
         <section className="grid gap-4 md:grid-cols-3">
           {[
             { href: "/blauwdruk/matrix", icon: LayoutGrid, title: "Dekkingsmatrix", text: "Welke G40-acties zijn al goed te monitoren, en waar zitten de gaten?" },
-            { href: "/methodiek", icon: Workflow, title: "Proces & methodiek", text: "Hoe 300+ indicatoren zijn beoordeeld, en de tijdlijn naar versie 1.0." },
+            { href: "/methodiek", icon: Workflow, title: "Proces & methodiek", text: "Hoe de indicatoren zijn beoordeeld, en de tijdlijn naar versie 1.0." },
             { href: "/user-stories", icon: Network, title: "User stories & CPT", text: "Wat het DMI-dashboard moet kunnen, gekoppeld aan functies uit de Digital Twin CPT." },
           ].map((c) => (
             <Link key={c.href} href={c.href} className="group flex gap-4 rounded-xl border border-border bg-white p-5 hover:border-dmi-blue-200 hover:shadow-dmi-md">

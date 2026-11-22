@@ -60,7 +60,6 @@ export function CommandSearch({
         >
           <Search className="size-4" />
           <span>Zoek in het register…</span>
-          <kbd className="ml-auto rounded border bg-muted px-1.5 font-mono text-[10px]">⌘K</kbd>
         </Button>
       )}
       <CommandDialog

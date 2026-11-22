@@ -4,8 +4,8 @@
 export type DomainCode = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "X";
 
 /**
- * Outcome of the indicator assessment. "goed" is shown as "Geschikt";
- * the data keeps the value used in the source documents.
+ * Outcome of the indicator assessment. "goed" is the internal key for
+ * "Geschikt" (older sources said "Goed").
  */
 export type Geschiktheid = "goed" | "gewenst" | "beperkt" | "niet";
 
@@ -17,16 +17,6 @@ export type Actielijn = "A" | "B" | "C" | "D" | "E" | "F";
 
 export type JaNee = "ja" | "nee" | "beperkt" | "onduidelijk";
 
-/** One change an overlay (newer register version) made to an indicator. */
-export interface IndicatorChange {
-  /** Register version that made the change, e.g. "0.94". */
-  version: string;
-  /** "added" = new in this version; the other fields carry the old and new value. */
-  field: "geschiktheid" | "domain" | "name" | "added";
-  from: string | null;
-  to: string | null;
-}
-
 export interface Norm {
   waarde: string | null;
   jaar: number | null;
@@ -34,53 +24,44 @@ export interface Norm {
 }
 
 export interface Indicator {
-  /** Unique, URL-safe key (source IDs are not unique in v0.9). */
+  /** Unique, URL-safe key (source IDs are not always unique). */
   slug: string;
   /** Source ID, e.g. "IND.025.12". */
   id: string;
-  /** Register code ("Volgorde register", e.g. "B09"); shared by grouped indicators. */
-  indeling: string | null;
   name: string;
   geschiktheid: RegisterGeschiktheid;
-  /** What later register versions changed, oldest first. */
-  changes: IndicatorChange[];
-  toelichting: string | null;
-  benodigdVoorGoed: string | null;
   vraagId: string;
+  /** Hoofd-DMI-domein. */
   domain: DomainCode;
-  domain2: DomainCode | null;
-  cluster: string | null;
+  /** Every domain the indicator is relevant to (✓ columns), hoofddomein first. */
+  domains: DomainCode[];
   blauwdruk: string[];
   /** Indicator type 0–9 (context → impacts), see taxonomy.indicatorTypes. */
   type: number | null;
   /** Dashboard / platform where the indicator is published. */
   bron: string | null;
+  /** "Brondata": link to the data. */
   bronUrl: string | null;
-  bronLabel: string | null;
-  /** Article or page that describes the source. */
-  bronBeschrijving: string | null;
-  bronBeschrijvingUrl: string | null;
-  /** Organisation that manages the indicator. */
-  beheerder: string | null;
-  dataverzamelaar: string | null;
+  /** "Bron beschrijving": what the indicator measures, in a few sentences. */
+  beschrijving: string | null;
+  /** "Meting", "Model" or "Geen". */
+  modelMeting: string | null;
   openbaar: JaNee | null;
   vrijGebruik: JaNee | null;
   voorwaarden: string | null;
-  eenheid: string | null;
+  /** Organisation that manages the indicator. */
+  beheerder: string | null;
   frequentie: string | null;
-  meestRecentJaar: number | null;
-  schaalniveau: string | null;
-  laagsteSchaal: string | null;
-  historie: boolean | null;
-  historieNote: string | null;
-  prognose: string | null;
-  /** "meting" (measured) or "model" (modelled). */
-  modelMeting: string | null;
+  meestRecentJaar: number | "onduidelijk" | null;
   /** Spatial form of the data: gebiedsniveau, raster, vlak, punt, lijn. */
   typeData: string | null;
-  /** Geographic coverage, e.g. "landsdekkend". */
+  laagsteSchaal: string | null;
+  /** Geographic coverage, e.g. "Landsdekkend". */
   dekking: string | null;
-  bewerkingNodig: boolean | null;
+  historie: JaNee | null;
+  dataverzamelaar: string | null;
+  prognose: string | null;
+  eenheid: string | null;
   meetmethode: string | null;
   /** Policy norm or target value, when one exists. */
   norm: Norm | null;
@@ -91,7 +72,7 @@ export interface MonitoringQuestion {
   id: string;
   slug: string;
   title: string;
-  /** Core question as formulated in v0.83C. */
+  /** Full wording of the question (background Excel, sheet V83C). */
   kernvraag: string | null;
   variaties: string | null;
   domains: DomainCode[];
@@ -132,7 +113,8 @@ export interface PhaseStatus {
 }
 
 export interface RegisterSource {
-  version: string;
+  /** Register version, when the source is a register printout. */
+  version: string | null;
   date: string;
   format: "xlsx" | "pdf";
   title: string;
@@ -141,17 +123,12 @@ export interface RegisterSource {
 }
 
 export interface RegisterMeta {
-  /** Current register version (newest source). */
+  /** Register version (the uitdraai), e.g. "0.96". */
   version: string;
   versionDate: string;
-  /** Source files, oldest first. */
   sources: RegisterSource[];
-  excelVersion: string;
-  excelDate: string;
-  pdfVersion: string;
-  pdfDate: string;
-  /** Number of indicators assessed across all sources (the register holds Goed and Gewenst). */
-  assessedCount: number;
+  /** Date of the background Excel (phase status, timeline). */
+  backgroundDate: string;
   intro: string;
   geschiktheidDefinitions: Record<Geschiktheid, string>;
   phases: { code: string; name: string }[];

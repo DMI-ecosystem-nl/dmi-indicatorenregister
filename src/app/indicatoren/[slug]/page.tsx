@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import { PageSkeleton } from "@/components/page-skeleton";
 import type { Metadata } from "next";
-import type { Indicator, IndicatorChange } from "@/data/types";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink, FileText, History, Info, Lightbulb, Ruler, Target } from "lucide-react";
+import { ExternalLink, FileText, Ruler, Target } from "lucide-react";
 import { BackLink } from "@/components/back-link-server";
 import { BlauwdrukChip } from "@/components/blauwdruk-chip";
 import { DomainBadge } from "@/components/domain-badge";
@@ -12,21 +11,14 @@ import { Field, Prose } from "@/components/field";
 import { GeschiktheidBadge } from "@/components/geschiktheid-badge";
 import { IndicatorCard } from "@/components/indicator-card";
 import { Container } from "@/components/page-header";
-import {
-  domains,
-  geschiktheidLabels,
-  indicatorTypeLabel,
-  schaalLabels,
-} from "@/data/taxonomy";
+import { fieldHelp, fieldLabels, type FieldKey } from "@/data/content/field-help";
+import { domains, indicatorTypeLabel } from "@/data/taxonomy";
 import {
   getIndicator,
   getQuestion,
   hostOf,
   indicators,
   indicatorsOf,
-  meta,
-  originalGeschiktheid,
-  schaalOf,
 } from "@/lib/selectors";
 
 export function generateStaticParams() {
@@ -44,27 +36,13 @@ const jaNee = (v: string | null) =>
 
 const capitalise = (v: string | null) => (v ? v[0].toUpperCase() + v.slice(1) : null);
 
-function changeText(c: IndicatorChange) {
-  switch (c.field) {
-    case "added":
-      return <>Nieuw toegevoegd aan het register.</>;
-    case "name":
-      return <>Naam was <strong>‘{c.from}’</strong>.</>;
-    case "geschiktheid":
-      return (
-        <>
-          Geschiktheid van <strong>{geschiktheidLabels[c.from as Indicator["geschiktheid"]]}</strong> naar{" "}
-          <strong>{geschiktheidLabels[c.to as Indicator["geschiktheid"]]}</strong>.
-        </>
-      );
-    case "domain":
-      return (
-        <>
-          Domein van <strong>{c.from}. {domains[c.from as Indicator["domain"]].label}</strong> naar{" "}
-          <strong>{c.to}. {domains[c.to as Indicator["domain"]].label}</strong>.
-        </>
-      );
-  }
+/** A metadata field labelled with its register column name, with an explanation. */
+function MetaField({ k, children }: { k: FieldKey; children: React.ReactNode }) {
+  return (
+    <Field label={fieldLabels[k]} help={fieldHelp[k]}>
+      {children}
+    </Field>
+  );
 }
 
 export default function IndicatorPage({ params }: PageProps<"/indicatoren/[slug]">) {
@@ -81,13 +59,10 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
   if (!i) notFound();
   const question = getQuestion(i.vraagId);
   const siblings = question ? indicatorsOf(question).filter((s) => s.slug !== i.slug) : [];
-  const metaFields = [i.dataverzamelaar, i.type, i.frequentie, i.meestRecentJaar, i.schaalniveau, i.openbaar];
+  const metaFields = [i.dataverzamelaar, i.type, i.frequentie, i.meestRecentJaar, i.laagsteSchaal, i.openbaar];
   const sparse = metaFields.filter((v) => v === null).length >= 4;
   const host = hostOf(i.bronUrl);
-  const schaal = schaalOf(i);
-  // The toelichting and "Benodigd voor Geschikt" were written for the v0.9 assessment.
-  const assessedAs = originalGeschiktheid(i);
-  const reassessed = assessedAs !== i.geschiktheid;
+  const [hoofd, ...related] = i.domains;
 
   return (
     <>
@@ -95,23 +70,21 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
         <Container className="pb-8 pt-6">
           <BackLink fallback="/indicatoren" label="Terug naar indicatoren" />
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            <span className="dmi-tag rounded bg-dmi-navy px-2 py-0.5 text-[11px] text-white">
-              {i.indeling ?? i.id}
-            </span>
-            {i.indeling && <span className="dmi-tag text-[11px] text-muted-foreground">{i.id}</span>}
+            <span className="dmi-tag text-[11px] text-muted-foreground">{i.id}</span>
             <GeschiktheidBadge value={i.geschiktheid} size="md" />
-            <span className="text-xs text-dmi-navy/70">Opgenomen in register v{meta.version}</span>
           </div>
           <h1 className="mt-3 max-w-4xl font-heading text-3xl font-semibold tracking-tight text-dmi-navy sm:text-4xl">
             {i.name}
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <DomainBadge code={i.domain} link short={false} />
-            {i.domain2 && i.domain2 !== i.domain && <DomainBadge code={i.domain2} link />}
-            {i.cluster && (
-              <span className="rounded-md border border-border bg-white px-2 py-0.5 text-xs text-muted-foreground">
-                {i.cluster}
-              </span>
+            <DomainBadge code={hoofd} link short={false} />
+            {related.length > 0 && (
+              <>
+                <span className="ml-1 text-xs text-muted-foreground">Ook relevant voor</span>
+                {related.map((c) => (
+                  <DomainBadge key={c} code={c} link />
+                ))}
+              </>
             )}
           </div>
           {question && (
@@ -131,46 +104,13 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
 
       <Container className="grid gap-8 py-8 lg:grid-cols-[1fr_340px]">
         <div className="space-y-8">
-          {(i.toelichting || i.benodigdVoorGoed || i.changes.length > 0) && (
-            <section className="space-y-3">
-              <h2 className="font-heading text-lg font-semibold text-dmi-navy">Beoordeling</h2>
-              {i.toelichting && (
-                <div className="flex gap-3 rounded-xl border border-border bg-white p-4">
-                  <Info className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Toelichting geschiktheid ({geschiktheidLabels[assessedAs]}
-                      {reassessed && `, v${meta.excelVersion}`})
-                    </p>
-                    <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{i.toelichting}</p>
-                  </div>
-                </div>
-              )}
-              {i.benodigdVoorGoed && !(reassessed && i.geschiktheid === "goed") && (
-                <div className="flex gap-3 rounded-xl border border-dmi-gold/50 bg-[#fdf6e6] p-4">
-                  <Lightbulb className="mt-0.5 size-4 shrink-0 text-[#8a5a12]" />
-                  <div>
-                    <p className="text-xs font-medium text-[#7a5410]">Benodigd voor ‘Geschikt’</p>
-                    <p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{i.benodigdVoorGoed}</p>
-                  </div>
-                </div>
-              )}
-              {i.changes.length > 0 && (
-                <div className="flex gap-3 rounded-xl border border-border bg-dmi-blue-050 p-4 text-sm">
-                  <History className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">Wijzigingen sinds v{meta.excelVersion}</p>
-                    <ul className="mt-1.5 space-y-1">
-                      {i.changes.map((c, n) => (
-                        <li key={n} className="flex gap-2">
-                          <span className="dmi-tag mt-0.5 shrink-0 text-[10px] text-dmi-blue">v{c.version}</span>
-                          <span>{changeText(c)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
+          {i.beschrijving && (
+            <section>
+              <h2 className="mb-3 font-heading text-lg font-semibold text-dmi-navy">Beschrijving</h2>
+              <div className="flex gap-3 rounded-xl border border-border bg-white p-4">
+                <FileText className="mt-0.5 size-4 shrink-0 text-dmi-blue" aria-hidden />
+                <Prose text={i.beschrijving} className="min-w-0" />
+              </div>
             </section>
           )}
 
@@ -178,42 +118,32 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
             <h2 className="mb-3 font-heading text-lg font-semibold text-dmi-navy">Metadata</h2>
             {sparse && (
               <p className="mb-3 rounded-lg bg-dmi-blue-050 px-3 py-2 text-xs text-muted-foreground">
-                De metadata van deze indicator is nog niet compleet. Deze wordt aangevuld voor versie 1.0.
+                {i.geschiktheid === "gewenst"
+                  ? "Deze indicator is gewenst: er is nog geen complete of landelijke bron. Daarom ontbreekt een deel van de metadata."
+                  : "De metadata van deze indicator is nog niet compleet."}
               </p>
             )}
             <dl className="grid gap-x-6 gap-y-5 rounded-xl border border-border bg-white p-5 sm:grid-cols-2 lg:grid-cols-3">
-              <Field label="Dashboard / platform">{i.bron}</Field>
-              <Field label="Beheerder">{i.beheerder}</Field>
-              <Field label="Dataverzamelaar">{i.dataverzamelaar}</Field>
-              <Field label="Indicatortype">
+              <MetaField k="dashboard">{i.bron}</MetaField>
+              <MetaField k="indicatorType">
                 {i.type !== null ? `${i.type}. ${indicatorTypeLabel(i.type)}` : null}
-              </Field>
-              <Field label="Schaalniveau">
-                {schaal !== "onbekend" ? (
-                  <>
-                    {schaalLabels[schaal]}
-                    {i.laagsteSchaal && (
-                      <span className="block text-xs text-muted-foreground">laagste: {i.laagsteSchaal}</span>
-                    )}
-                  </>
-                ) : null}
-              </Field>
-              <Field label="Type data">{capitalise(i.typeData)}</Field>
-              <Field label="Dekking">{capitalise(i.dekking)}</Field>
-              <Field label="Model of meting">{capitalise(i.modelMeting)}</Field>
-              <Field label="Frequentie">{i.frequentie}</Field>
-              <Field label="Meest recent jaar">{i.meestRecentJaar}</Field>
-              <Field label="Historie">
-                {i.historie === null ? null : i.historieNote ?? (i.historie ? "Ja" : "Nee")}
-              </Field>
-              <Field label="Prognose">{i.prognose}</Field>
-              <Field label="Eenheid">{i.eenheid}</Field>
-              <Field label="Openbaar toegankelijk">{jaNee(i.openbaar)}</Field>
-              <Field label="Data vrij te gebruiken">{jaNee(i.vrijGebruik)}</Field>
-              <Field label="Voorwaarden">{i.voorwaarden}</Field>
-              <Field label="Bewerking nodig">
-                {i.bewerkingNodig === null ? null : i.bewerkingNodig ? "Ja" : "Nee"}
-              </Field>
+              </MetaField>
+              <MetaField k="modelMeting">{i.modelMeting}</MetaField>
+              <MetaField k="openbaar">{jaNee(i.openbaar)}</MetaField>
+              <MetaField k="vrijGebruik">{jaNee(i.vrijGebruik)}</MetaField>
+              <MetaField k="voorwaarden">{i.voorwaarden}</MetaField>
+              <MetaField k="beheerder">{i.beheerder}</MetaField>
+              <MetaField k="frequentie">{capitalise(i.frequentie)}</MetaField>
+              <MetaField k="meestRecentJaar">
+                {i.meestRecentJaar === "onduidelijk" ? "Onduidelijk" : i.meestRecentJaar}
+              </MetaField>
+              <MetaField k="typeData">{i.typeData}</MetaField>
+              <MetaField k="laagsteSchaal">{i.laagsteSchaal}</MetaField>
+              <MetaField k="dekking">{i.dekking}</MetaField>
+              <MetaField k="historie">{jaNee(i.historie)}</MetaField>
+              <MetaField k="dataverzamelaar">{i.dataverzamelaar}</MetaField>
+              <MetaField k="prognose">{i.prognose}</MetaField>
+              <MetaField k="eenheid">{i.eenheid}</MetaField>
             </dl>
           </section>
 
@@ -222,20 +152,21 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
               <h2 className="font-heading text-lg font-semibold text-dmi-navy">Meetmethode en norm</h2>
               {i.meetmethode && (
                 <div className="flex gap-3 rounded-xl border border-border bg-white p-4">
-                  <Ruler className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">Meetmethode</p>
-                    <Prose text={i.meetmethode} className="mt-1" />
-                  </div>
+                  <Ruler className="mt-0.5 size-4 shrink-0 text-dmi-blue" aria-hidden />
+                  <dl className="min-w-0">
+                    <MetaField k="meetmethode">
+                      <Prose text={i.meetmethode} />
+                    </MetaField>
+                  </dl>
                 </div>
               )}
               {i.norm && (
                 <div className="flex gap-3 rounded-xl border border-border bg-white p-4">
                   <Target className="mt-0.5 size-4 shrink-0 text-dmi-blue" />
                   <dl className="grid min-w-0 flex-1 gap-x-6 gap-y-3 sm:grid-cols-3">
-                    <Field label="Normwaarde">{i.norm.waarde}</Field>
-                    <Field label="Normjaar">{i.norm.jaar}</Field>
-                    <Field label="Normbron">{i.norm.bron}</Field>
+                    <MetaField k="normwaarde">{i.norm.waarde}</MetaField>
+                    <MetaField k="normJaar">{i.norm.jaar}</MetaField>
+                    <MetaField k="normBron">{i.norm.bron}</MetaField>
                   </dl>
                 </div>
               )}
@@ -271,30 +202,16 @@ async function IndicatorPageContent({ params }: { params: PageProps<"/indicatore
                 rel="noopener noreferrer"
                 className="mt-2 flex items-start gap-2 rounded-lg bg-dmi-navy px-3 py-2.5 text-sm font-medium text-white hover:bg-dmi-blue"
               >
-                <ExternalLink className="mt-0.5 size-4 shrink-0" />
+                <ExternalLink className="mt-0.5 size-4 shrink-0" aria-hidden />
                 <span className="min-w-0">
-                  <span className="block">{i.bronLabel ?? "Open bron"}</span>
+                  <span className="block">{i.bron ? `Open ${i.bron}` : "Open de bron"}</span>
                   {host && <span className="block truncate text-xs font-normal text-white/70">{host}</span>}
                 </span>
               </a>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">
-                {i.bronLabel ?? "Geen bronlink beschikbaar in het register."}
+                {i.bron ? `${i.bron}. ` : ""}Er is nog geen link naar de brondata.
               </p>
-            )}
-            {i.bronBeschrijving && (
-              <a
-                href={i.bronBeschrijvingUrl ?? undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 flex items-start gap-2 text-sm text-dmi-blue hover:underline"
-              >
-                <FileText className="mt-0.5 size-4 shrink-0" />
-                <span className="min-w-0">
-                  <span className="block text-xs text-muted-foreground">Beschrijving van de bron</span>
-                  {i.bronBeschrijving}
-                </span>
-              </a>
             )}
           </div>
           {i.blauwdruk.length > 0 && (

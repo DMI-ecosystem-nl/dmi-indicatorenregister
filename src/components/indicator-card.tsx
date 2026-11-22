@@ -30,7 +30,7 @@ export function IndicatorCard({
       )}
     >
       <div className="flex items-center gap-2">
-        <span className="dmi-tag text-[10px] text-muted-foreground">{i.indeling ?? i.id}</span>
+        <span className="dmi-tag text-[10px] text-muted-foreground">{i.id}</span>
         <GeschiktheidBadge value={i.geschiktheid} className="ml-auto" />
       </div>
       <div className="min-w-0">
@@ -55,7 +55,7 @@ export function IndicatorCard({
             <Layers className="size-3" aria-hidden /> {schaalLabels[schaal]}
           </span>
         )}
-        {i.meestRecentJaar && (
+        {typeof i.meestRecentJaar === "number" && (
           <span className="inline-flex items-center gap-1">
             <CalendarClock className="size-3" aria-hidden /> {i.meestRecentJaar}
           </span>
