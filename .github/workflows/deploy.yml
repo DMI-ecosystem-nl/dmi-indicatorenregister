@@ -1,0 +1,26 @@
+name: Deploy to Ploi Cloud
+
+# Ploi Cloud does not deploy on push by itself here; this calls the app's deploy webhook.
+# The URL is a secret (anyone holding it can trigger a deploy): set it with
+#   gh secret set PLOI_DEPLOY_WEBHOOK_URL
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger Ploi deployment
+        env:
+          WEBHOOK_URL: ${{ secrets.PLOI_DEPLOY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "::error::Secret PLOI_DEPLOY_WEBHOOK_URL is not set"
+            exit 1
+          fi
+          curl --fail --silent --show-error --output /dev/null --retry 3 --retry-all-errors --max-time 30 -X POST "$WEBHOOK_URL"
