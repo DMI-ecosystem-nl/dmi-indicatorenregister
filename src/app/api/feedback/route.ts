@@ -7,13 +7,16 @@ import {
   feedbackCategory,
   isValidEmail,
 } from "@/lib/feedback";
+import { getGitHubToken, hasGitHubCredentials } from "@/lib/github-auth";
 import { meta } from "@/lib/selectors";
 
 /**
  * Turns feedback from the site into a GitHub issue.
  *
  * Env:
- * - GITHUB_FEEDBACK_TOKEN  fine-grained PAT with only "Issues: read and write" on the repo below.
+ * - GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY
+ *                          GitHub App with only "Issues: read and write", see `@/lib/github-auth`.
+ * - GITHUB_FEEDBACK_TOKEN  fallback: fine-grained PAT with the same permission.
  * - GITHUB_FEEDBACK_REPO   optional, "owner/name"; defaults to the canonical repo.
  */
 const DEFAULT_REPO = "DMI-ecosystem-nl/dmi-indicatorenregister";
@@ -81,8 +84,7 @@ function sameOrigin(request: Request) {
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return fail(E.forbidden, 403);
 
-  const token = process.env.GITHUB_FEEDBACK_TOKEN;
-  if (!token) {
+  if (!hasGitHubCredentials()) {
     return fail(E.unavailable, 503);
   }
 
@@ -157,6 +159,15 @@ export async function POST(request: Request) {
 
   const repo = process.env.GITHUB_FEEDBACK_REPO || DEFAULT_REPO;
   const labels = ["feedback", category.githubLabel, ...(contact ? ["contact gewenst"] : [])];
+
+  let token: string | null;
+  try {
+    token = await getGitHubToken();
+  } catch (err) {
+    console.error("[feedback] GitHub App authentication failed", err);
+    return fail(E.unreachable, 502);
+  }
+  if (!token) return fail(E.unavailable, 503);
 
   const create = (withLabels: boolean) =>
     fetch(`https://api.github.com/repos/${repo}/issues`, {

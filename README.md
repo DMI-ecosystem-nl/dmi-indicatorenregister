@@ -41,7 +41,7 @@ npm run dev     # http://localhost:3000
 npm run build
 ```
 
-Hosting: Vercel. Alle pagina's zijn statisch; alleen `/api/feedback` draait op de server.
+Alle pagina's zijn statisch; alleen `/api/feedback` draait op de server.
 
 ## Feedbackknop
 
@@ -51,10 +51,14 @@ met de labels `feedback` plus `inhoud`, `enhancement`, `question` of `bug`.
 
 | Variabele | Waarde |
 | --- | --- |
-| `GITHUB_FEEDBACK_TOKEN` | Fine-grained personal access token; resource owner `DMI-ecosystem-nl`, alleen deze repository, permissie *Issues: Read and write*. |
+| `GITHUB_APP_ID` | App ID van de GitHub App van `DMI-ecosystem-nl` (permissie *Issues: Read and write*, geïnstalleerd op deze repository). |
+| `GITHUB_APP_INSTALLATION_ID` | Installation ID van die App in de organisatie. |
+| `GITHUB_APP_PRIVATE_KEY` | Private key (`.pem`) van de App, base64-gecodeerd op één regel (`base64 -i key.pem`). |
+| `GITHUB_FEEDBACK_TOKEN` | Alternatief voor de App: fine-grained personal access token met dezelfde permissie. |
 | `GITHUB_FEEDBACK_REPO` | Optioneel, `owner/naam`. Standaard `DMI-ecosystem-nl/dmi-indicatorenregister`. |
 
-Zet ze in Vercel (Production en Preview) en lokaal in `.env.local`. Zonder token toont de knop een
+Een GitHub App verloopt niet; de site haalt zelf elk uur een nieuw installatietoken op. Zet de variabelen als
+secrets bij de hosting en lokaal in `.env.local`. Zonder gegevens toont de knop een
 melding met het e-mailadres van het DMI-team. Bescherming tegen misbruik: same-origin-check, honeypot,
 lengtegrenzen, max. 5 berichten per IP per 10 minuten (per serverinstantie), en `@mentions` worden onschadelijk gemaakt.
 De repository is openbaar: het formulier vraagt bezoekers geen persoonsgegevens in hun bericht te zetten.
